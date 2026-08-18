@@ -1,7 +1,13 @@
 import app from './app.js';
+import { connectDatabase } from './config/database.js';
+import { environment } from './config/env.js';
 
-const port = Number(process.env.PORT) || 5000;
+async function startServer() {
+  await connectDatabase();
 
-app.listen(port, () => {
-  console.log(`CommerceIQ API listening on http://localhost:${port}`);
-});
+  app.listen(environment.port, () => {
+    console.log(`Server running on http://localhost:${environment.port}`);
+  });
+}
+
+void startServer();
