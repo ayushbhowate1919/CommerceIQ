@@ -172,9 +172,38 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 6 — Inventory Intelligence (completed)
+
+### Completed Work
+
+- Added query validator module (`server/src/validators/inventory.validator.ts`) enforcing parameter checks for `lookbackDays` (`7`, `14`, `30`, `60`, `90`), `riskLevel` (`critical`, `high`, `medium`, `healthy`), `reorderOnly`, `category`, `search`, and pagination parameters (`page`, `limit`).
+- Created inventory service engine (`server/src/services/inventory.service.ts`) computing deterministic heuristics:
+  - `averageDailySales = quantitySold / lookbackDays`.
+  - `estimatedDaysUntilStockout = stock / averageDailySales`.
+  - Risk classification (`critical` for 0–3 days or stock=0; `high` for 4–7 days; `medium` for 8–14 days; `healthy` for 15+ days or zero sales).
+  - `reorderNeeded` warning flag (`stock <= reorderLevel` or critical/high risk) and `suggestedReorderQuantity`.
+  - Aggregate inventory health summary calculations (`getInventorySummary`).
+- Created inventory controller (`server/src/controllers/inventory.controller.ts`) and authenticated router mounted at `/api/inventory` (`server/src/routes/inventory.routes.ts`).
+- Created comprehensive integration test suite `server/tests/milestone6-verification.test.ts` testing auth protection, parameter validation, exact formula checkpoint (Stock=20, Daily Sales=10 -> Stockout in 2 days, Critical), out-of-stock items, lookback math, filters, summary totals, and multi-tenant data isolation.
+
+### Verification Performed
+
+- Executed `calculateProductRisk` unit test verifying exact spec checkpoint: Stock = 20, Daily Sales = 10 yields 2 estimated stockout days and `critical` risk level.
+- `GET /api/inventory/risks` returned paginated risk report sorted by severity.
+- `GET /api/inventory/summary` returned total products, total stock units, out-of-stock count, critical risk count, and retail valuation.
+- Multi-tenant isolation verified: Merchant B receives 0 inventory items and 0 valuation.
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly for client and server with 0 warnings or errors.
+- `npm.cmd test` passed all 58 test cases across all 7 test suites.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-6 — Inventory Intelligence
+7 — Dashboard Frontend
+
 
 
 

@@ -39,11 +39,13 @@ export async function runSeed(): Promise<void> {
 
   // Clean existing demo data for clean re-run
   console.log('🧹 Cleaning prior merchant data...');
-  await Product.deleteMany({});
   await Promise.all([
-    Customer.deleteMany({ merchant: merchantId }),
-    Order.deleteMany({ merchant: merchantId }),
-    Review.deleteMany({ merchant: merchantId }),
+    Product.deleteMany({
+      $or: [{ merchant: merchantId }, { sku: { $in: RAW_PRODUCTS.map((p) => p.sku) } }],
+    }),
+    Customer.deleteMany({}),
+    Order.deleteMany({}),
+    Review.deleteMany({}),
   ]);
 
   // 1. Insert 50 Products

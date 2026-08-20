@@ -8,13 +8,17 @@ export function getDatabaseStatus(): DatabaseStatus {
 }
 
 export async function connectDatabase(): Promise<boolean> {
+  if (mongoose.connection.readyState === 1) {
+    return true;
+  }
+
   if (!environment.mongoUri) {
     console.warn('MongoDB connection skipped: MONGODB_URI is not configured.');
     return false;
   }
 
   try {
-    await mongoose.connect(environment.mongoUri, { serverSelectionTimeoutMS: 5000 });
+    await mongoose.connect(environment.mongoUri, { serverSelectionTimeoutMS: 15000 });
     console.log('MongoDB connected');
     return true;
   } catch (error) {
