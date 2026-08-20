@@ -108,7 +108,36 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 4 — Seed Realistic Demo Data (completed)
+
+### Completed Work
+
+- Updated `Order`, `Customer`, and `Review` models with merchant ObjectId reference (`merchant`), indexes (`merchant`, `createdAt`), and exported document types (`OrderDocument`, `CustomerDocument`, `ReviewDocument`).
+- Created seed dataset templates (`server/src/seed/seed-data.ts`) containing 50 products across 5 categories, 150 customer profiles with segmentations, and 500 review templates with pre-computed `aiAnalysis` structures.
+- Created idempotent data seeding pipeline (`server/src/seed/seed.ts`) that provisions demo merchant (`demo@commerceiq.com` / `Password123!`), cleans prior merchant data, inserts 50 products, 150 customers, 1,500 orders over 90 days, 500 reviews, and updates product rating statistics.
+- Configured CLI script commands `"seed": "npm run seed --workspace server"` in root `package.json` and `"seed": "tsx src/seed/seed.ts"` in `server/package.json`.
+- Created automated test suite `server/tests/milestone4-verification.test.ts` verifying all seed database count checkpoints and date distribution trends.
+
+### Verification Performed
+
+- Executed `npm run seed` and verified CLI console output matching exact spec checkpoints:
+  - Demo Merchant: `demo@commerceiq.com`
+  - Products: 50
+  - Customers: 150
+  - Orders: 1,500
+  - Reviews: 500
+- Verified Product rating and reviewCount aggregation updates across all seeded products.
+- Verified Order dates span across 90 days with realistic status breakdown (`delivered`, `shipped`, `pending`, `cancelled`, `returned`).
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly for client and server with 0 warnings or errors.
+- `npm.cmd test` passed all 37 unit and integration test cases across all 5 test suites.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-4 — Seed Realistic Demo Data
+5 — Analytics Backend
+
 
