@@ -14,6 +14,11 @@ export function errorHandler(error: unknown, _request: Request, response: Respon
   }
 
   if (typeof error === 'object' && error !== null && 'code' in error && error.code === 11000) {
+    const errObj = error as { keyPattern?: Record<string, unknown>; keyValue?: Record<string, unknown>; message?: string };
+    if (errObj.keyPattern?.sku || errObj.keyValue?.sku || (typeof errObj.message === 'string' && errObj.message.includes('sku'))) {
+      response.status(409).json({ success: false, error: { code: 'SKU_ALREADY_EXISTS', message: 'A product with this SKU already exists.' } });
+      return;
+    }
     response.status(409).json({ success: false, error: { code: 'EMAIL_IN_USE', message: 'An account with this email already exists.' } });
     return;
   }

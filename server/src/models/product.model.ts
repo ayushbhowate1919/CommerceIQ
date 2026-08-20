@@ -1,7 +1,8 @@
-import { Schema, model } from 'mongoose';
+import { HydratedDocument, InferSchemaType, Schema, model } from 'mongoose';
 
 const productSchema = new Schema(
   {
+    merchant: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     name: { type: String, required: true, trim: true },
     sku: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
@@ -24,4 +25,7 @@ productSchema.index({ createdAt: -1 });
 
 const Product = model('Product', productSchema);
 
+export type ProductDocument = HydratedDocument<InferSchemaType<typeof productSchema>>;
+
 export default Product;
+

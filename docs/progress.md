@@ -76,6 +76,39 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 3 — Product Management (completed)
+
+### Completed Work
+
+- Updated `Product` model with merchant ObjectId reference (`merchant`), indexes (`merchant`, unique `sku`, `category`, `stock`, `createdAt`), and exported `ProductDocument` type.
+- Added product input validation module (`server/src/validators/product.validator.ts`) for create, update, and list query parameter validation with numeric range enforcement.
+- Added product service layer (`server/src/services/product.service.ts`) enforcing merchant data isolation, search by name/SKU, category/status filtering, pagination metadata generation, single product retrieval, partial updates, and deletion.
+- Added product controller layer (`server/src/controllers/product.controller.ts`) and authenticated product routes (`server/src/routes/product.routes.ts`) mounted at `/api/products`.
+- Enhanced global error middleware (`server/src/middleware/error.middleware.ts`) to return HTTP 409 `SKU_ALREADY_EXISTS` on duplicate SKU database errors.
+- Added frontend navigation header (`Navbar`), Product Catalog List Page (`/products`), Product Creation Page (`/products/new`), and Product Detail/Edit/Delete Page (`/products/:id`) with reactive search, filtering, pagination, status badges, and validation error banners.
+- Created comprehensive integration test suite `server/tests/milestone3-verification.test.ts` verifying all 12 checklist criteria.
+
+### Verification Performed
+
+- Verified Product Creation: `POST /api/products` creates merchant-scoped product documents.
+- Verified Listing & Pagination: `GET /api/products` returns merchant products with pagination metadata (`page`, `limit`, `total`, `totalPages`).
+- Verified Search: `search` filter searches by product name and SKU (case-insensitive regex).
+- Verified Filters: `category` and `status` query filters accurately isolate products.
+- Verified Product Details: `GET /api/products/:id` fetches full product detail document.
+- Verified Product Update: `PATCH /api/products/:id` updates product fields and persists changes.
+- Verified Product Deletion: `DELETE /api/products/:id` deletes product document cleanly.
+- Verified Unauthorized Access: Unauthenticated requests to product endpoints are rejected with HTTP 401 `UNAUTHORIZED`.
+- Verified Merchant Isolation: User A cannot list, view, edit, or delete User B's products (returning HTTP 404 or empty list).
+- Verified Validation & Error Handling: Invalid payload values (e.g. negative price) return HTTP 400 `VALIDATION_ERROR`; duplicate SKU returns HTTP 409 `SKU_ALREADY_EXISTS`.
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly for client and server with 0 warnings or errors.
+- `npm.cmd test` passed all 29 test cases across all test suites.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-3 — Product Management
+4 — Seed Realistic Demo Data
+
