@@ -136,8 +136,45 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 5 — Analytics Backend (completed)
+
+### Completed Work
+
+- Added query validator module (`server/src/validators/analytics.validator.ts`) handling preset ranges (`7d`, `30d`, `90d`, `12m`), custom ISO dates (`startDate`, `endDate`), interval groupings (`day`, `week`, `month`), parameter bounds validation, and date window calculations.
+- Implemented core analytics service layer (`server/src/services/analytics.service.ts`) using MongoDB aggregation pipelines for:
+  - `getDashboardSummary`: KPI cards (Revenue, Orders, AOV, Units Sold) with period-over-period percentage changes.
+  - `getRevenueTrend`: Time-series revenue, order volume, and AOV grouped by date interval.
+  - `getOrderSummary`: Order counts broken down by status and gross vs net revenue metrics.
+  - `getCategoryRevenue`: Revenue and volume grouped by product category with percentage share of total store revenue.
+  - `getTopProducts`: Product ranking by revenue or quantity sold with product details.
+  - `getPeriodComparison`: Side-by-side comparison between current and previous date windows.
+  - `getProductPerformance`: Detailed per-product sales metrics paired with review scores.
+- Implemented analytics controller handlers (`server/src/controllers/analytics.controller.ts`).
+- Created authenticated Express routers mounted at `/api/dashboard` (`server/src/routes/dashboard.routes.ts`) and `/api/analytics` (`server/src/routes/analytics.routes.ts`) enforcing merchant JWT authorization (`requireAuthentication`).
+- Updated `server/package.json` test runner configuration (`--test-concurrency=1`) to prevent parallel test suite database race conditions.
+- Created comprehensive integration test suite `server/tests/milestone5-verification.test.ts` testing authentication, validation errors, multi-tenant isolation, and calculations against the seeded demo dataset.
+
+### Verification Performed
+
+- `GET /api/dashboard/summary` returned accurate KPI figures and period change metrics.
+- `GET /api/analytics/revenue` returned interval-grouped revenue trends spanning the date range.
+- `GET /api/analytics/categories` returned category revenue breakdown summing to ~100%.
+- `GET /api/analytics/top-products` returned top products sorted by revenue.
+- `GET /api/analytics/order-summary` returned status breakdown (delivered, shipped, pending, cancelled, returned).
+- `GET /api/analytics/period-comparison` returned comparative current vs previous metrics.
+- `GET /api/analytics/product-performance` returned per-product sales and rating analytics.
+- Multi-Tenant Isolation verified: Merchant B gets 0 revenue/orders proving data isolation.
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly for client and server with 0 warnings or errors.
+- `npm.cmd test` passed all 48 test cases across all test suites.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-5 — Analytics Backend
+6 — Inventory Intelligence
+
 
 

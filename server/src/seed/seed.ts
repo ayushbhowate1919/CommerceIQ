@@ -39,8 +39,8 @@ export async function runSeed(): Promise<void> {
 
   // Clean existing demo data for clean re-run
   console.log('🧹 Cleaning prior merchant data...');
+  await Product.deleteMany({});
   await Promise.all([
-    Product.deleteMany({ merchant: merchantId }),
     Customer.deleteMany({ merchant: merchantId }),
     Order.deleteMany({ merchant: merchantId }),
     Review.deleteMany({ merchant: merchantId }),
