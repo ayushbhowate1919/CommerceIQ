@@ -200,9 +200,43 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 7 — Dashboard Frontend (completed)
+
+### Completed Work
+
+- Installed `recharts` library for interactive client-side charts.
+- Created dashboard TypeScript type definitions (`client/src/types/dashboard.ts`) covering summary KPIs, time-series revenue trends, category revenue breakdown, top product rankings, order summary metrics, and inventory risk items.
+- Created HTTP API service layer (`client/src/api/client.ts` and `client/src/api/dashboardApi.ts`) connecting React components to backend endpoints (`/api/dashboard/summary`, `/api/analytics/revenue`, `/api/analytics/categories`, `/api/analytics/top-products`, `/api/analytics/order-summary`, `/api/inventory/summary`, `/api/inventory/risks`).
+- Created responsive merchant navigation layout (`client/src/components/layout/SidebarLayout.tsx`) featuring store avatar, role indicator, navigation links (`Dashboard`, `Products`, `Inventory`), active page indicators, merchant email tag, and logout action.
+- Built reusable dashboard widgets:
+  - `DateRangeSelector`: Interactive range filters (`7d`, `30d`, `90d`, `12m`).
+  - `KpiCards`: Total Revenue, Orders, AOV, and Units Sold cards with period-over-period percentage badges and loading skeletons.
+  - `RevenueTrendChart`: Recharts AreaChart with smooth gradient fills and custom tooltips.
+  - `CategoryBreakdownChart`: Recharts PieChart displaying revenue share across categories.
+  - `TopProductsWidget`: Ranked top-sellers list with progress bars.
+  - `InventoryRiskWidget`: Inventory risk overview card highlighting out-of-stock and critical stockout alerts.
+- Built full page views:
+  - `DashboardPage`: Orchestrates KPI summary cards, revenue trend area chart, category pie chart, top products widget, and inventory risk preview.
+  - `InventoryPage`: Dedicated Inventory Health page supporting search, category filter, lookback window selector, risk level severity filter (`critical`, `high`, `medium`, `healthy`), reorder needed toggle, and paginated inventory table.
+- Updated `client/src/styles.css` with dark sidebar, topbar, KPI card glassmorphism, badge colors, chart wrappers, and responsive grid system.
+- Verified dashboard works completely standalone without requiring any AI or OpenAI API key.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all 58 test cases across all test suites.
+- Confirmed reactive date range selection (`7d`, `30d`, `90d`, `12m`) refreshes metrics and charts.
+- Confirmed standalone functionality without AI dependencies.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-7 — Dashboard Frontend
+8 — Review Management
+
 
 
 

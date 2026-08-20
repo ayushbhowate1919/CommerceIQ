@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { SidebarLayout } from './components/layout/SidebarLayout';
+import { DashboardPage } from './pages/DashboardPage';
+import { InventoryPage } from './pages/InventoryPage';
 
 export type User = { id: string; name: string; email: string; role: string; createdAt: string };
 export type AuthResponse = { token: string; user: User };
@@ -121,40 +125,8 @@ function useAuth(): AuthContextValue {
   return context;
 }
 
-function Navbar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  if (!user) return null;
-
-  return (
-    <header className="navbar">
-      <div className="navbar-content">
-        <Link to="/dashboard" className="navbar-brand">
-          <span>CommerceIQ</span>
-          <span className="logo-badge">PRO</span>
-        </Link>
-        <nav className="nav-links">
-          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Dashboard
-          </NavLink>
-          <NavLink to="/products" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Products
-          </NavLink>
-        </nav>
-        <div className="user-nav-group">
-          <span className="user-email-tag">{user.email}</span>
-          <button className="btn btn-outline" onClick={() => void logout().then(() => navigate('/login'))}>
-            Log out
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -166,10 +138,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   return user ? (
-    <>
-      <Navbar />
-      {children}
-    </>
+    <ErrorBoundary fallbackTitle="CommerceIQ Dashboard Error">
+      <SidebarLayout user={user} onLogout={logout}>
+        {children}
+      </SidebarLayout>
+    </ErrorBoundary>
   ) : (
     <Navigate to="/login" replace state={{ from: location.pathname }} />
   );
@@ -246,58 +219,6 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   );
 }
 
-function DashboardPage() {
-  const { user } = useAuth();
-  const [productCount, setProductCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    void request<Product[]>('/products?limit=1')
-      .then((res) => setProductCount(res.pagination?.total ?? 0))
-      .catch(() => setProductCount(0));
-  }, []);
-
-  return (
-    <main className="app-page">
-      <div className="page-header">
-        <div className="page-title-group">
-          <h1>Welcome back, {user?.name}</h1>
-          <p className="page-subtitle">Here is an overview of your commerce workspace.</p>
-        </div>
-        <Link to="/products/new" className="btn btn-primary">
-          + Add Product
-        </Link>
-      </div>
-
-      <div className="detail-grid">
-        <div className="card detail-item">
-          <span className="detail-label">Active Products</span>
-          <span className="detail-value highlight">{productCount !== null ? productCount : '...'}</span>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Managed in inventory</span>
-        </div>
-        <div className="card detail-item">
-          <span className="detail-label">Merchant Role</span>
-          <span className="detail-value">{user?.role}</span>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Authenticated Merchant</span>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3>Quick Navigation</h3>
-        <p style={{ color: '#64748b', marginBottom: '1.25rem' }}>
-          Manage product inventory, view details, search, filter, and track product status.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <Link to="/products" className="btn btn-secondary">
-            View All Products
-          </Link>
-          <Link to="/products/new" className="btn btn-primary">
-            Create Product
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -845,6 +766,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute>
+                <InventoryPage />
               </ProtectedRoute>
             }
           />
