@@ -233,9 +233,37 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 8 — Review Management (completed)
+
+### Completed Work
+
+- Created review query validator module (`server/src/validators/review.validator.ts`) handling `rating`, `minRating`, `maxRating`, `productId`, `search`, `verifiedOnly`, and pagination parameters (`page`, `limit`).
+- Created review service module (`server/src/services/review.service.ts`) computing:
+  - `getReviewsService`: Paginated review query populated with product (`name`, `sku`, `category`) and customer details.
+  - `getMerchantReviewSummaryService`: Aggregate review count, average store rating, 1–5 star distribution counts & percentages, negative review alerts, lowest-rated catalog products, and recent negative reviews feed.
+  - `getProductReviewSummaryService`: Product-specific review counts, average rating, and star breakdown.
+- Created review controller handlers (`server/src/controllers/review.controller.ts`) and authenticated router mounted at `/api/reviews` (`server/src/routes/review.routes.ts`).
+- Created client API layer (`client/src/types/review.ts` and `client/src/api/reviewApi.ts`) connecting React components to backend endpoints (`/api/reviews`, `/api/reviews/summary`, `/api/reviews/product/:productId`).
+- Built responsive merchant Customer Reviews page (`client/src/pages/ReviewsPage.tsx`) featuring store rating KPI, star breakdown bars, lowest-rated products alert card, rating filter, product filter, text search, verified purchase toggle, and review feed cards.
+- Updated navigation layout (`client/src/components/layout/SidebarLayout.tsx`) and application routing (`client/src/App.tsx`) with protected `/reviews` page.
+- Created comprehensive integration test suite `server/tests/milestone8-verification.test.ts` verifying authentication protection, query validation, paginated queries, rating/product filters, text search, summary aggregations, and multi-tenant isolation.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all 67 test cases across all 8 test suites.
+- Verified multi-tenant isolation: Merchant B receives 0 reviews and 0 aggregate stats.
+- Verified standalone review management functionality without AI dependencies.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-8 — Review Management
+9 — OpenAI Integration Foundation
+
 
 
 

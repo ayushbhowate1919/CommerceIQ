@@ -57,6 +57,12 @@ export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) 
             <span className="link-icon">⚠️</span>
             <span>Inventory Health</span>
           </NavLink>
+
+          <div className="nav-section-title">Customer Feedback</div>
+          <NavLink to="/reviews" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+            <span className="link-icon">⭐</span>
+            <span>Customer Reviews</span>
+          </NavLink>
         </nav>
 
         <div className="sidebar-footer">

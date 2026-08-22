@@ -1,4 +1,6 @@
 import { HydratedDocument, InferSchemaType, Schema, model } from 'mongoose';
+import './product.model.js';
+import './customer.model.js';
 
 const reviewSchema = new Schema(
   {

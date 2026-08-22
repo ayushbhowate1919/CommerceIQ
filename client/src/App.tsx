@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { SidebarLayout } from './components/layout/SidebarLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
+import { ReviewsPage } from './pages/ReviewsPage';
 
 export type User = { id: string; name: string; email: string; role: string; createdAt: string };
 export type AuthResponse = { token: string; user: User };
@@ -798,6 +799,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProductDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reviews"
+            element={
+              <ProtectedRoute>
+                <ReviewsPage />
               </ProtectedRoute>
             }
           />
