@@ -208,25 +208,24 @@ Do not overcomplicate authentication.
 
 ## AI
 
-Use the official OpenAI SDK from the backend only.
+Use the official Google Gemini SDK (`@google/genai` or `@google/generative-ai`) from the backend only.
 
-Prefer the current **Responses API** abstraction for new OpenAI-backed functionality.
+Prefer Google Gemini 2.5 Flash / 1.5 Flash for fast response times and structured outputs.
 
 Keep the selected model configurable through an environment variable:
 
-`OPENAI_MODEL`
+`GEMINI_MODEL`
 
 Do NOT hard-code a model name throughout the application.
 
-The backend must never expose `OPENAI_API_KEY` to the browser.
+The backend must never expose `GEMINI_API_KEY` to the browser.
 
-OpenAI's current JavaScript quickstart uses the official `openai` package and `client.responses.create(...)`; the Responses API also supports custom tools/function calling. See the official documentation before implementation if SDK behavior has changed.
+Google Gemini SDK supports structured JSON outputs using response schemas and controlled function/tool calling via declaration definitions.
 
 References:
-- OpenAI JavaScript quickstart: https://platform.openai.com/docs/quickstart/make-your-first-api-request
-- OpenAI Responses API reference: https://platform.openai.com/docs/api-reference/responses
-- Function calling reference: https://platform.openai.com/docs/api-reference/responses
-- OpenAI platform docs: https://platform.openai.com/docs/
+- Google Gen AI SDK docs: https://ai.google.dev/gemini-api/docs
+- Gemini Structured Outputs: https://ai.google.dev/gemini-api/docs/structured-output
+- Gemini Function Calling: https://ai.google.dev/gemini-api/docs/function-calling
 
 ---
 
@@ -275,6 +274,7 @@ The LLM must not invent database facts.
                          HTTPS / JSON
                                |
                     +----------v-----------+
+                    +----------+-----------+
                     |   Express Backend    |
                     | Controllers / Routes |
                     +----------+-----------+
@@ -283,7 +283,7 @@ The LLM must not invent database facts.
               |                                 |
       +-------v--------+                +-------v--------+
       |    MongoDB     |                |  AI Service    |
-      | Products       |                | OpenAI SDK     |
+      | Products       |                | Gemini SDK     |
       | Orders         |                | Prompts        |
       | Reviews        |                | Tools          |
       | Users          |                | Structured out|
@@ -345,7 +345,7 @@ commerce-intelligence/
     └── tests/
 ```
 
-Do not put OpenAI API calls directly in Express route handlers.
+Do not put Gemini API calls directly in Express route handlers.
 
 ---
 
@@ -363,8 +363,8 @@ MONGODB_URI=
 
 JWT_SECRET=
 
-OPENAI_API_KEY=
-OPENAI_MODEL=
+GEMINI_API_KEY=
+GEMINI_MODEL=
 
 CLIENT_URL=http://localhost:5173
 ```
@@ -1415,7 +1415,7 @@ No orders found for this period.
 Try selecting a wider date range.
 ```
 
-If OpenAI is unavailable:
+If Gemini API is unavailable:
 
 ```text
 AI insights are temporarily unavailable.
@@ -1873,7 +1873,7 @@ The dashboard should now be valuable WITHOUT AI.
 
 This is a major checkpoint.
 
-If the OpenAI API key is missing, the application must still provide:
+If the Gemini API key is missing, the application must still provide:
 
 - KPIs
 - charts
@@ -1905,18 +1905,18 @@ Merchant can find:
 
 ---
 
-# MILESTONE 9 — OpenAI Integration Foundation
+# MILESTONE 9 — Gemini Integration Foundation
 
 ## Goal
 
-Integrate the OpenAI SDK correctly on the server.
+Integrate the Google Gemini SDK correctly on the server.
 
 Tasks:
 
-- install official `openai` SDK
-- create AI client module
-- configure `OPENAI_API_KEY`
-- configure `OPENAI_MODEL`
+- install official `@google/genai` (or `@google/generative-ai`) SDK
+- create AI client module (`server/src/ai/client.ts`)
+- configure `GEMINI_API_KEY`
+- configure `GEMINI_MODEL`
 - create one tiny test endpoint
 - centralize error handling
 
@@ -1926,10 +1926,10 @@ Architecture:
 Route
  -> Controller
  -> AI Service
- -> OpenAI Client
+ -> Gemini Client
 ```
 
-No frontend-to-OpenAI calls.
+No frontend-to-Gemini API calls.
 
 ## Checkpoint
 
@@ -2618,7 +2618,7 @@ Prepare this 60-second explanation:
 - Why not allow the model to generate Mongo queries?
 - How do you prevent hallucination?
 - How do you reduce cost?
-- What happens if OpenAI is down?
+- What happens if Gemini API is down?
 - How do you handle prompt injection?
 - Why is the API key only on the backend?
 
@@ -2734,7 +2734,7 @@ feat(seed): add commerce demo dataset
 feat(analytics): add revenue aggregation
 feat(dashboard): add merchant dashboard
 feat(inventory): add stockout risk engine
-feat(ai): integrate OpenAI service
+feat(ai): integrate Gemini service
 feat(ai): add product description generator
 feat(ai): add review analysis
 feat(ai): add analytics tool calling
@@ -2801,7 +2801,7 @@ Checkpoint:
 ## Week 3
 
 ### Days 15-16
-- OpenAI integration
+- Gemini integration
 - description generator
 
 ### Days 17-18

@@ -262,7 +262,7 @@
 
 ## Next Milestone
 
-9 — OpenAI Integration Foundation
+9 — Gemini Integration Foundation
 
 
 

@@ -43,7 +43,7 @@ Prefer TypeScript; use modern JavaScript only when TypeScript adds unnecessary c
 
 ## Testing and Security
 
-Add focused unit tests for calculations, validators, and AI tool dispatch; add integration tests for auth and API endpoints. Use descriptive test names such as `returns critical risk when stock covers three days`. Validate all request and tool inputs. Never commit `.env` files, API keys, tokens, or real customer data; keep `OPENAI_API_KEY` server-side only.
+Add focused unit tests for calculations, validators, and AI tool dispatch; add integration tests for auth and API endpoints. Use descriptive test names such as `returns critical risk when stock covers three days`. Validate all request and tool inputs. Never commit `.env` files, API keys, tokens, or real customer data; keep `GEMINI_API_KEY` server-side only.
 
 ## Commits and Pull Requests
 
