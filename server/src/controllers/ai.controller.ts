@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { testGeminiHealthService } from '../services/ai.service.js';
+import { generateProductDescriptionService, testGeminiHealthService } from '../services/ai.service.js';
 import { ApiError } from '../utils/api-error.js';
 
 function getMerchantId(request: Request): string {
@@ -21,6 +21,24 @@ export async function healthTestHandler(
     response.json({
       success: true,
       data: healthResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function generateDescriptionHandler(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    getMerchantId(request);
+    const result = await generateProductDescriptionService(request.body);
+
+    response.json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     next(error);

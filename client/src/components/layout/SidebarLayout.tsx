@@ -63,6 +63,12 @@ export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) 
             <span className="link-icon">⭐</span>
             <span>Customer Reviews</span>
           </NavLink>
+
+          <div className="nav-section-title">AI Studio</div>
+          <NavLink to="/ai/description-generator" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+            <span className="link-icon">✨</span>
+            <span>Description Studio</span>
+          </NavLink>
         </nav>
 
         <div className="sidebar-footer">

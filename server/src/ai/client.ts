@@ -8,7 +8,7 @@ export function isGeminiConfigured(): boolean {
 }
 
 export function getGeminiModelName(): string {
-  return environment.geminiModel ?? 'gemini-2.5-flash';
+  return environment.geminiModel ?? 'gemini-3.6-flash';
 }
 
 export function getGeminiClient(): GoogleGenAI | null {

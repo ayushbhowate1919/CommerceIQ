@@ -283,9 +283,36 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 10 — AI Product Description Generator (completed)
+
+### Completed Work
+
+- Created Gemini JSON response schema (`server/src/ai/schemas/description.schema.ts`) using `@google/genai` `Schema` and `Type` defining structured output (`title`, `shortDescription`, `longDescription`, `bulletPoints`, `seoKeywords`).
+- Created prompt generator module (`server/src/ai/prompts/description.prompt.ts`) crafting e-commerce copywriter system instructions and grounded product prompt templates.
+- Created request payload validator (`server/src/validators/ai.validator.ts`) enforcing input validation on product name, category, features, target audience, brand tone, and SEO keywords.
+- Updated AI service (`server/src/services/ai.service.ts`) with `generateProductDescriptionService` invoking Gemini SDK with `responseMimeType: "application/json"` and `responseSchema`.
+- Added controller handler (`server/src/controllers/ai.controller.ts`) and mounted route `POST /api/ai/generate-description` on authenticated router (`server/src/routes/ai.routes.ts`).
+- Added client TypeScript types (`client/src/types/ai.ts`) and API layer (`client/src/api/aiApi.ts`).
+- Created AI Description Studio frontend page (`client/src/pages/DescriptionGeneratorPage.tsx`) with catalog product auto-fill selector, input form controls, tone selectors, result card displays, copy-to-clipboard functionality, loading spinners, and toast notifications.
+- Integrated AI Studio route (`/ai/description-generator`) and navigation link in `client/src/components/layout/SidebarLayout.tsx` and `client/src/App.tsx`.
+- Created comprehensive integration test suite `server/tests/milestone10-verification.test.ts` testing auth protection, payload validation, schema conformance, and degraded unconfigured API key handling.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all test suites including `milestone10-verification.test.ts`.
+- Verified server-side API key protection (`GEMINI_API_KEY` kept exclusively on backend).
+- Verified structured output conformance and fallback handling when Gemini API key is missing.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-10 — AI Product Description Generator
+11 — Review AI Analysis
+
 
 
 

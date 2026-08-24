@@ -3,6 +3,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate,
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { SidebarLayout } from './components/layout/SidebarLayout';
 import { DashboardPage } from './pages/DashboardPage';
+import { DescriptionGeneratorPage } from './pages/DescriptionGeneratorPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ReviewsPage } from './pages/ReviewsPage';
 
@@ -807,6 +808,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ai/description-generator"
+            element={
+              <ProtectedRoute>
+                <DescriptionGeneratorPage />
               </ProtectedRoute>
             }
           />
