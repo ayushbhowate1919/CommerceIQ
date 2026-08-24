@@ -260,9 +260,33 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 9 — Gemini Integration Foundation (completed)
+
+### Completed Work
+
+- Installed official `@google/genai` SDK in `@commerceiq/server`.
+- Updated environment configuration (`server/src/config/env.ts`) with `geminiApiKey` (`process.env.GEMINI_API_KEY`) and `geminiModel` (`process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'`).
+- Created Gemini client module (`server/src/ai/client.ts`) encapsulating `GoogleGenAI` initialization, missing key handling, and helper functions (`isGeminiConfigured`, `getGeminiModelName`, `getGeminiClient`).
+- Created AI service (`server/src/services/ai.service.ts`), controller (`server/src/controllers/ai.controller.ts`), and authenticated router (`server/src/routes/ai.routes.ts`) mounted at `/api/ai`.
+- Added health test endpoint `POST /api/ai/health-test` returning structured AI operational status and handling missing API keys cleanly without crashing server boot.
+- Created comprehensive integration test suite `server/tests/milestone9-verification.test.ts` verifying authentication enforcement, configuration status checks, and model metadata.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all 71 test cases across all 9 test suites.
+- Verified server-side API key isolation: `GEMINI_API_KEY` stays 100% on the backend.
+- Verified missing API key fallback mode returns clear configuration response without crashing the application.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-9 — Gemini Integration Foundation
+10 — AI Product Description Generator
+
 
 
 

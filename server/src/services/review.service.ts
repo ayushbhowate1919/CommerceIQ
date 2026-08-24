@@ -1,7 +1,6 @@
 import mongoose, { FilterQuery } from 'mongoose';
 import Review, { ReviewDocument } from '../models/review.model.js';
 import Product from '../models/product.model.js';
-import Customer from '../models/customer.model.js';
 import { ReviewQueryInput } from '../validators/review.validator.js';
 
 export interface StarDistributionItem {

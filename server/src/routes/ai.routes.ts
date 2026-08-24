@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { healthTestHandler } from '../controllers/ai.controller.js';
+import { requireAuthentication } from '../middleware/auth.middleware.js';
+
+const aiRouter = Router();
+
+aiRouter.use(requireAuthentication);
+
+aiRouter.post('/health-test', healthTestHandler);
+
+export default aiRouter;

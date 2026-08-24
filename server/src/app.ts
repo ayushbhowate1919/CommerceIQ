@@ -7,6 +7,7 @@ import dashboardRouter from './routes/dashboard.routes.js';
 import analyticsRouter from './routes/analytics.routes.js';
 import inventoryRouter from './routes/inventory.routes.js';
 import reviewRouter from './routes/review.routes.js';
+import aiRouter from './routes/ai.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/reviews', reviewRouter);
+app.use('/api/ai', aiRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
