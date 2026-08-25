@@ -309,9 +309,39 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 11 — Review AI Analysis (completed)
+
+### Completed Work
+
+- Created Gemini JSON response schemas (`server/src/ai/schemas/review-analysis.schema.ts`) for single review sentiment extraction (`SingleReviewAnalysis`) and product review batch analysis (`ProductReviewsAnalysis`).
+- Created prompt builders (`server/src/ai/prompts/review-analysis.prompt.ts`) with system instructions enforcing Prompt Injection Awareness and strict isolation of untrusted customer review text.
+- Added input payload validators (`server/src/validators/ai.validator.ts`) enforcing ObjectId validation, optional `forceRefresh` boolean flag, and `limit` parameter bounds.
+- Updated AI service module (`server/src/services/ai.service.ts`) with:
+  - `analyzeSingleReviewService`: Analyzes single customer review, persists `aiAnalysis` onto MongoDB `Review` model document, and reuses cached analysis when `forceRefresh=false`.
+  - `analyzeProductReviewsService`: Performs aggregate sentiment analysis across product review batches, computing sentiment scores, top positive/negative themes, executive summaries, and recommended merchant actions.
+- Added controller handlers (`server/src/controllers/ai.controller.ts`) and mounted routes in authenticated Express router (`server/src/routes/ai.routes.ts`):
+  - `POST /api/ai/analyze-review/:reviewId`
+  - `POST /api/ai/analyze-product-reviews/:productId`
+- Updated client TypeScript interfaces (`client/src/types/ai.ts` & `client/src/types/review.ts`) and API service module (`client/src/api/aiApi.ts`).
+- Built **AI Review Intelligence Panel** and per-review sentiment triggers on merchant Customer Reviews page (`client/src/pages/ReviewsPage.tsx`).
+- Created comprehensive automated integration test suite `server/tests/milestone11-verification.test.ts` testing auth enforcement, parameter validation, MongoDB document caching, batch product review analysis, and multi-tenant data isolation.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all 11 test suites including `milestone11-verification.test.ts`.
+- Verified single review analysis caching: `aiAnalysis` is stored on the Mongoose `Review` document and returned on subsequent queries without unnecessary AI calls.
+- Verified multi-tenant data isolation: Merchant B cannot request review analysis for Merchant A's reviews or products (returns HTTP 404 `NOT_FOUND`).
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-11 — Review AI Analysis
+12 — AI Business Advisor
+
 
 
 

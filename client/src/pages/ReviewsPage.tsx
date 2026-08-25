@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchReviews, fetchReviewSummary } from '../api/reviewApi';
+import { analyzeProductReviewsApi, analyzeSingleReviewApi } from '../api/aiApi';
 import type { PaginationMetadata } from '../api/client';
-import type { ReviewItem, ReviewSummary } from '../types/review';
 import { request } from '../api/client';
+import { fetchReviews, fetchReviewSummary } from '../api/reviewApi';
+import type { ProductReviewsAnalysis, SingleReviewAnalysis } from '../types/ai';
+import type { ReviewItem, ReviewSummary } from '../types/review';
 
 type SimpleProduct = { _id: string; name: string; sku: string };
 
@@ -37,6 +39,14 @@ export function ReviewsPage() {
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [error, setError] = useState<string>('');
 
+  // AI Product Analysis State
+  const [aiProductAnalysis, setAiProductAnalysis] = useState<ProductReviewsAnalysis | null>(null);
+  const [loadingAiProduct, setLoadingAiProduct] = useState<boolean>(false);
+  const [aiProductError, setAiProductError] = useState<string>('');
+
+  // AI Single Review Loading State Map
+  const [analyzingReviewIds, setAnalyzingReviewIds] = useState<Record<string, boolean>>({});
+
   // Fetch Summary & Product List once
   useEffect(() => {
     setLoadingSummary(true);
@@ -49,6 +59,12 @@ export function ReviewsPage() {
       .then((res) => setProducts(res.data))
       .catch(() => { /* silent fallback */ });
   }, []);
+
+  // Reset product AI analysis when product filter changes
+  useEffect(() => {
+    setAiProductAnalysis(null);
+    setAiProductError('');
+  }, [productFilter]);
 
   // Fetch Paginated Reviews when filters change
   useEffect(() => {
@@ -71,16 +87,47 @@ export function ReviewsPage() {
       .finally(() => setLoadingReviews(false));
   }, [page, ratingFilter, productFilter, searchQuery, verifiedOnly]);
 
+  const handleAnalyzeProductReviews = async (forceRefresh = false) => {
+    if (!productFilter) return;
+    setLoadingAiProduct(true);
+    setAiProductError('');
+    try {
+      const result = await analyzeProductReviewsApi(productFilter, forceRefresh);
+      setAiProductAnalysis(result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to run product review AI analysis.';
+      setAiProductError(msg);
+    } finally {
+      setLoadingAiProduct(false);
+    }
+  };
+
+  const handleAnalyzeSingleReview = async (reviewId: string, forceRefresh = false) => {
+    setAnalyzingReviewIds((prev) => ({ ...prev, [reviewId]: true }));
+    try {
+      const analysis: SingleReviewAnalysis = await analyzeSingleReviewApi(reviewId, forceRefresh);
+      setReviews((prev) =>
+        prev.map((r) => (r._id === reviewId ? { ...r, aiAnalysis: analysis } : r))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to analyze review with AI.');
+    } finally {
+      setAnalyzingReviewIds((prev) => ({ ...prev, [reviewId]: false }));
+    }
+  };
+
   const positivePercent = summary && summary.totalReviews > 0
     ? Math.round((summary.positiveReviewsCount / summary.totalReviews) * 100)
     : 0;
+
+  const selectedProductObj = products.find((p) => p._id === productFilter);
 
   return (
     <main className="app-page">
       <div className="page-header">
         <div className="page-title-group">
-          <h1>Customer Reviews & Rating Analytics</h1>
-          <p className="page-subtitle">Track merchant rating health, product sentiment, customer feedback, and low-rating alerts.</p>
+          <h1>Customer Reviews & AI Rating Intelligence</h1>
+          <p className="page-subtitle">Track merchant rating health, product sentiment, customer feedback, and AI review analysis.</p>
         </div>
       </div>
 
@@ -196,7 +243,7 @@ export function ReviewsPage() {
                       SKU: {prod.sku} • {prod.reviewCount} review{prod.reviewCount !== 1 ? 's' : ''}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span
                       className="badge"
                       style={{
@@ -208,12 +255,159 @@ export function ReviewsPage() {
                     >
                       {prod.averageRating.toFixed(1)} ★
                     </span>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                      onClick={() => {
+                        setProductFilter(prod.productId);
+                        setPage(1);
+                      }}
+                    >
+                      Filter
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
+
+      {/* AI Product Review Intelligence Section */}
+      <div className="card" style={{ marginBottom: '1.5rem', borderLeft: '4px solid #6366f1' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <div>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>✨ Gemini AI Review Intelligence</span>
+            </h3>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#64748b' }}>
+              {selectedProductObj
+                ? `Analyze customer review themes, sentiment, and actionable insights for ${selectedProductObj.name}.`
+                : 'Select a product from the filter below to run product-level review batch AI analysis.'}
+            </p>
+          </div>
+
+          {productFilter && (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => handleAnalyzeProductReviews(false)}
+                disabled={loadingAiProduct}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                {loadingAiProduct ? 'Analyzing Feedback...' : '⚡ Run AI Review Analysis'}
+              </button>
+              {aiProductAnalysis && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleAnalyzeProductReviews(true)}
+                  disabled={loadingAiProduct}
+                  title="Force refresh without using cached summary"
+                >
+                  🔄 Refresh
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {aiProductError && (
+          <div className="alert-error" style={{ fontSize: '0.875rem', marginTop: '0.75rem' }}>
+            {aiProductError}
+          </div>
+        )}
+
+        {aiProductAnalysis && (
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+            {/* Header badges */}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block' }}>Overall Sentiment</span>
+                <span
+                  className="badge"
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    backgroundColor:
+                      aiProductAnalysis.overallSentiment === 'positive'
+                        ? '#dcfce7'
+                        : aiProductAnalysis.overallSentiment === 'mixed'
+                        ? '#fef9c3'
+                        : '#fee2e2',
+                    color:
+                      aiProductAnalysis.overallSentiment === 'positive'
+                        ? '#15803d'
+                        : aiProductAnalysis.overallSentiment === 'mixed'
+                        ? '#a16207'
+                        : '#b91c1c',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {aiProductAnalysis.overallSentiment} Sentiment
+                </span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block' }}>Sentiment Score</span>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a' }}>
+                  {(aiProductAnalysis.sentimentScore * 100).toFixed(0)}/100
+                </span>
+              </div>
+
+              {aiProductAnalysis.analyzedReviewCount !== undefined && (
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block' }}>Analyzed Reviews</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#334155' }}>
+                    {aiProductAnalysis.analyzedReviewCount} Reviews in Batch
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Executive Summary */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+              <strong style={{ fontSize: '0.9rem', color: '#334155' }}>Executive Synthesis:</strong>
+              <p style={{ margin: '0.35rem 0 0 0', color: '#1e293b', lineHeight: 1.5, fontSize: '0.925rem' }}>
+                {aiProductAnalysis.summary}
+              </p>
+            </div>
+
+            {/* Positive & Negative Themes Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ border: '1px solid #bbf7d0', backgroundColor: '#f0fdf4', padding: '0.85rem', borderRadius: '0.5rem' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#166534', fontSize: '0.9rem' }}>👍 Top Positive Themes</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {aiProductAnalysis.topPositiveThemes.map((theme, i) => (
+                    <span key={i} className="badge" style={{ backgroundColor: '#dcfce7', color: '#14532d', borderColor: '#86efac' }}>
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ border: '1px solid #fecaca', backgroundColor: '#fef2f2', padding: '0.85rem', borderRadius: '0.5rem' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#991b1b', fontSize: '0.9rem' }}>👎 Pain Points & Complaints</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {aiProductAnalysis.topNegativeThemes.map((theme, i) => (
+                    <span key={i} className="badge" style={{ backgroundColor: '#fee2e2', color: '#7f1d1d', borderColor: '#fca5a5' }}>
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Recommended Actions */}
+            <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.85rem', borderRadius: '0.5rem' }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e40af', fontSize: '0.9rem' }}>💡 Recommended Merchant Actions</h4>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#1e3a8a', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                {aiProductAnalysis.recommendedActions.map((action, i) => (
+                  <li key={i}>{action}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -282,16 +476,17 @@ export function ReviewsPage() {
           </label>
         </div>
 
-        {ratingFilter !== undefined && (
+        {(ratingFilter !== undefined || productFilter) && (
           <button
             className="btn btn-secondary"
             onClick={() => {
               setRatingFilter(undefined);
+              setProductFilter('');
               setPage(1);
             }}
             style={{ fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}
           >
-            Clear Star Filter
+            Clear Filters
           </button>
         )}
       </div>
@@ -365,6 +560,19 @@ export function ReviewsPage() {
                         ✓ Verified Purchase
                       </span>
                     )}
+
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                      onClick={() => handleAnalyzeSingleReview(rev._id, !!rev.aiAnalysis)}
+                      disabled={analyzingReviewIds[rev._id]}
+                    >
+                      {analyzingReviewIds[rev._id]
+                        ? 'Analyzing…'
+                        : rev.aiAnalysis
+                        ? '✨ Re-analyze AI'
+                        : '✨ AI Sentiment'}
+                    </button>
                   </div>
                 </div>
 
@@ -385,6 +593,75 @@ export function ReviewsPage() {
                 <div style={{ marginTop: '0.75rem', color: '#334155', lineHeight: 1.5, fontSize: '0.95rem' }}>
                   "{rev.text}"
                 </div>
+
+                {/* Single Review AI Analysis Card if present */}
+                {rev.aiAnalysis && (
+                  <div
+                    style={{
+                      marginTop: '0.85rem',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '0.4rem',
+                      borderLeft: `3px solid ${
+                        rev.aiAnalysis.sentiment === 'positive'
+                          ? '#22c55e'
+                          : rev.aiAnalysis.sentiment === 'negative'
+                          ? '#ef4444'
+                          : '#eab308'
+                      }`,
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span>✨ AI Sentiment Analysis:</span>
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: '0.75rem',
+                            textTransform: 'capitalize',
+                            backgroundColor:
+                              rev.aiAnalysis.sentiment === 'positive'
+                                ? '#dcfce7'
+                                : rev.aiAnalysis.sentiment === 'negative'
+                                ? '#fee2e2'
+                                : '#fef9c3',
+                            color:
+                              rev.aiAnalysis.sentiment === 'positive'
+                                ? '#15803d'
+                                : rev.aiAnalysis.sentiment === 'negative'
+                                ? '#b91c1c'
+                                : '#a16207',
+                          }}
+                        >
+                          {rev.aiAnalysis.sentiment}
+                        </span>
+                      </span>
+
+                      {rev.aiAnalysis.analyzedAt && (
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                          Analyzed {new Date(rev.aiAnalysis.analyzedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+
+                    <p style={{ margin: '0 0 0.4rem 0', color: '#475569', fontStyle: 'italic' }}>
+                      "{rev.aiAnalysis.summary}"
+                    </p>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                      {rev.aiAnalysis.topics.map((t, idx) => (
+                        <span key={idx} className="badge" style={{ backgroundColor: '#e2e8f0', color: '#334155', fontSize: '0.75rem' }}>
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div style={{ color: '#1e40af', fontSize: '0.825rem', fontWeight: 600 }}>
+                      💡 Suggested Action: {rev.aiAnalysis.suggestedAction}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

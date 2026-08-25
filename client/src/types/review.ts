@@ -23,6 +23,7 @@ export interface ReviewItem {
   createdAt: string;
   productId?: ReviewProductInfo;
   customerId?: ReviewCustomerInfo;
+  aiAnalysis?: import('./ai.js').SingleReviewAnalysis;
 }
 
 export interface StarDistribution {

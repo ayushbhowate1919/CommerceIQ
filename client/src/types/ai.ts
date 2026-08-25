@@ -22,3 +22,22 @@ export interface GeminiHealthTestResult {
   responseText?: string;
   error?: string;
 }
+
+export interface SingleReviewAnalysis {
+  sentiment: 'positive' | 'neutral' | 'negative';
+  topics: string[];
+  summary: string;
+  suggestedAction: string;
+  analyzedAt?: string;
+}
+
+export interface ProductReviewsAnalysis {
+  overallSentiment: 'positive' | 'mixed' | 'negative' | 'neutral';
+  sentimentScore: number;
+  topPositiveThemes: string[];
+  topNegativeThemes: string[];
+  summary: string;
+  recommendedActions: string[];
+  analyzedReviewCount?: number;
+  analyzedAt?: string;
+}
