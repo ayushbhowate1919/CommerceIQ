@@ -126,3 +126,22 @@ export function validateProductReviewsAnalysisInput(payload: unknown): Validated
   return { productId, forceRefresh, limit };
 }
 
+export interface ValidatedBusinessAdvisorInput {
+  timeRange: '7d' | '30d' | '90d';
+  forceRefresh?: boolean;
+}
+
+export function validateBusinessAdvisorInput(payload: unknown): ValidatedBusinessAdvisorInput {
+  const raw = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+
+  let timeRange: '7d' | '30d' | '90d' = '30d';
+  if (typeof raw.timeRange === 'string' && ['7d', '30d', '90d'].includes(raw.timeRange.trim())) {
+    timeRange = raw.timeRange.trim() as '7d' | '30d' | '90d';
+  }
+
+  const forceRefresh = typeof raw.forceRefresh === 'boolean' ? raw.forceRefresh : false;
+
+  return { timeRange, forceRefresh };
+}
+
+

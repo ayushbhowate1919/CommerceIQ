@@ -338,15 +338,37 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 12 — AI Business Advisor (completed)
+
+### Completed Work
+
+- Created Gemini JSON response schema (`server/src/ai/schemas/business-advisor.schema.ts`) defining structured business advisor output (`healthScore`, `executiveSummary`, `strengths`, `risks`, `recommendedActions`).
+- Created system instructions and prompt builder (`server/src/ai/prompts/business-advisor.prompt.ts`) formatting deterministic business snapshot metrics (Revenue, Growth %, Orders, AOV, Top Products, Stockout Alerts, Customer Review Complaints).
+- Updated `AIInsight` Mongoose model (`server/src/models/ai-insight.model.ts`) with merchant ObjectId reference and compound indexing (`merchant`, `type`) for multi-tenant data isolation.
+- Created input validator (`server/src/validators/ai.validator.ts`) handling `timeRange` (`7d`, `30d`, `90d`) and `forceRefresh` validation.
+- Updated AI service module (`server/src/services/ai.service.ts`) with:
+  - `generateBusinessAdvisorService`: Calculates store metrics deterministically via MongoDB aggregation pipelines (`getPeriodComparison`, `getTopProducts`, `getInventorySummary`, `getMerchantReviewSummaryService`), passes snapshot data to Gemini SDK, and persists report into `AIInsight` MongoDB collection.
+  - `getLatestBusinessAdvisorService`: Retrieves latest stored business advisor insight for the merchant.
+- Added controller handlers (`server/src/controllers/ai.controller.ts`) and mounted routes in authenticated router (`server/src/routes/ai.routes.ts`):
+  - `POST /api/ai/business-advisor`
+  - `GET /api/ai/business-advisor/latest`
+- Added client TypeScript interfaces (`client/src/types/ai.ts`) and API methods (`client/src/api/aiApi.ts`).
+- Created frontend **AI Business Advisor Studio** page (`client/src/pages/BusinessAdvisorPage.tsx`) rendering store health score gauge (0–100), executive summary card, key strengths, risk warnings, and prioritized action matrix (Priority, Action, Impact, Category).
+- Embedded **AI Business Insights Panel** on main merchant dashboard (`client/src/pages/DashboardPage.tsx`).
+- Updated sidebar navigation (`client/src/components/layout/SidebarLayout.tsx`) and application routing (`client/src/App.tsx`) with `/ai/business-advisor` link and route.
+- Created comprehensive integration test suite `server/tests/milestone12-verification.test.ts` testing auth protection, payload validation, MongoDB document persistence, GET latest endpoint, multi-tenant isolation, and degraded mode handling.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all 86 test cases across all 12 test suites.
+- Verified multi-tenant data isolation: Merchant B cannot retrieve Merchant A's advisor reports (`GET /api/ai/business-advisor/latest` returns `null` for Merchant B).
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-12 — AI Business Advisor
-
-
-
-
-
-
-
-
-
+13 — AI Tool Calling / Natural-Language Analytics

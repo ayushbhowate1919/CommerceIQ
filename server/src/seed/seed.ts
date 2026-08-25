@@ -15,7 +15,7 @@ import {
   type SeedCustomer,
 } from './seed-data.js';
 
-export async function runSeed(): Promise<void> {
+export async function runSeed(force = false): Promise<void> {
   console.log('🌱 Starting CommerceIQ Seed Pipeline...');
   await connectDatabase();
 
@@ -37,16 +37,19 @@ export async function runSeed(): Promise<void> {
 
   const merchantId = demoMerchant._id;
 
+  // Idempotency check: if dataset already populated and force=false, skip redundant seeding
+  const existingProdCount = await Product.countDocuments({ merchant: merchantId });
+  if (!force && existingProdCount >= 50) {
+    console.log(`ℹ️ Baseline merchant data already present (${existingProdCount} products). Skipping re-seed.`);
+    return;
+  }
+
   // Clean existing demo data for clean re-run
   console.log('🧹 Cleaning prior merchant data...');
-  await Promise.all([
-    Product.deleteMany({
-      $or: [{ merchant: merchantId }, { sku: { $in: RAW_PRODUCTS.map((p) => p.sku) } }],
-    }),
-    Customer.deleteMany({}),
-    Order.deleteMany({}),
-    Review.deleteMany({}),
-  ]);
+  await Product.deleteMany({ merchant: merchantId });
+  await Customer.deleteMany({ merchant: merchantId });
+  await Order.deleteMany({ merchant: merchantId });
+  await Review.deleteMany({ merchant: merchantId });
 
   // 1. Insert 50 Products
   console.log('📦 Seeding 50 Products...');
@@ -90,15 +93,13 @@ export async function runSeed(): Promise<void> {
   const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
 
   for (let i = 1; i <= 1500; i++) {
-    // Generate deterministic time curve with slight trend upward towards recent dates
-    const randomFactor = Math.pow(Math.random(), 0.85); // skew slightly towards recent dates
+    const randomFactor = Math.pow(Math.random(), 0.85);
     const orderTimestamp = now - Math.floor(randomFactor * ninetyDaysMs);
     const orderDate = new Date(orderTimestamp);
 
     const customerIndex = Math.floor(Math.random() * createdCustomers.length);
     const customer = createdCustomers[customerIndex];
 
-    // Pick 1 to 4 items
     const itemCount = Math.floor(Math.random() * 3) + 1;
     const items = [];
     let subtotal = 0;
@@ -124,11 +125,10 @@ export async function runSeed(): Promise<void> {
     }
 
     subtotal = Math.round(subtotal * 100) / 100;
-    const discountRate = Math.random() < 0.25 ? 0.1 : 0; // 25% orders get 10% discount
+    const discountRate = Math.random() < 0.25 ? 0.1 : 0;
     const discount = Math.round(subtotal * discountRate * 100) / 100;
     const totalAmount = Math.round((subtotal - discount) * 100) / 100;
 
-    // Status assignment based on age
     const ageDays = (now - orderTimestamp) / (1000 * 60 * 60 * 24);
     let status = 'delivered';
     let paymentStatus = 'paid';
@@ -245,9 +245,8 @@ export async function runSeed(): Promise<void> {
   console.log('=========================================\n');
 }
 
-// Execute standalone if called directly
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
-  runSeed()
+  runSeed(true)
     .then(() => {
       console.log('Seed completed successfully.');
       process.exit(0);

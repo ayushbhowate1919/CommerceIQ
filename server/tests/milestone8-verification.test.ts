@@ -182,11 +182,9 @@ test('Milestone 8 — Review Management Verification', async (t) => {
   });
 
   await t.test('7. GET /api/reviews/product/:productId returns product review breakdown', async () => {
-    const productsRes = await fetch(`${baseUrl}/api/products?limit=1`, {
-      headers: { Authorization: `Bearer ${demoToken}` },
-    });
-    const productsBody = (await productsRes.json()) as { data: Array<{ _id: string; name: string }> };
-    const prodId = productsBody.data[0]._id;
+    const sampleProduct = await Product.findOne({}).exec();
+    assert.ok(sampleProduct, 'Seeded product must exist');
+    const prodId = sampleProduct._id.toString();
 
     const res = await fetch(`${baseUrl}/api/reviews/product/${prodId}`, {
       headers: { Authorization: `Bearer ${demoToken}` },
@@ -206,7 +204,7 @@ test('Milestone 8 — Review Management Verification', async (t) => {
 
     assert.equal(body.success, true);
     assert.equal(body.data.productId, prodId);
-    assert.equal(body.data.productName, productsBody.data[0].name);
+    assert.equal(body.data.productName, sampleProduct.name);
     assert.equal(body.data.starDistribution.length, 5);
   });
 

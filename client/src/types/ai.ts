@@ -41,3 +41,20 @@ export interface ProductReviewsAnalysis {
   analyzedReviewCount?: number;
   analyzedAt?: string;
 }
+
+export interface RecommendedActionItem {
+  priority: 'high' | 'medium' | 'low';
+  action: string;
+  impact: string;
+  category: 'inventory' | 'marketing' | 'product' | 'customer_experience';
+}
+
+export interface BusinessAdvisorResult {
+  healthScore: number;
+  executiveSummary: string;
+  strengths: string[];
+  risks: string[];
+  recommendedActions: RecommendedActionItem[];
+  timeRange?: string;
+  analyzedAt?: string;
+}

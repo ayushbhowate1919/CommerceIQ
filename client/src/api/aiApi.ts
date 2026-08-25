@@ -1,5 +1,6 @@
 import { request } from './client.js';
 import type {
+  BusinessAdvisorResult,
   GeminiHealthTestResult,
   GenerateDescriptionPayload,
   GeneratedDescriptionResult,
@@ -42,6 +43,24 @@ export async function analyzeProductReviewsApi(
   const response = await request<ProductReviewsAnalysis>(`/ai/analyze-product-reviews/${productId}`, {
     method: 'POST',
     body: JSON.stringify({ forceRefresh }),
+  });
+  return response.data;
+}
+
+export async function generateBusinessAdvisorApi(
+  timeRange = '30d',
+  forceRefresh = false
+): Promise<BusinessAdvisorResult> {
+  const response = await request<BusinessAdvisorResult>('/ai/business-advisor', {
+    method: 'POST',
+    body: JSON.stringify({ timeRange, forceRefresh }),
+  });
+  return response.data;
+}
+
+export async function getLatestBusinessAdvisorApi(): Promise<BusinessAdvisorResult | null> {
+  const response = await request<BusinessAdvisorResult | null>('/ai/business-advisor/latest', {
+    method: 'GET',
   });
   return response.data;
 }

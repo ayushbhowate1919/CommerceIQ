@@ -1,9 +1,17 @@
 import { getGeminiClient, getGeminiModelName, isGeminiConfigured } from '../ai/client.js';
+import {
+  type BusinessSnapshotData,
+  buildBusinessAdvisorPrompt,
+} from '../ai/prompts/business-advisor.prompt.js';
 import { buildProductDescriptionPrompt } from '../ai/prompts/description.prompt.js';
 import {
   buildProductReviewsAnalysisPrompt,
   buildSingleReviewAnalysisPrompt,
 } from '../ai/prompts/review-analysis.prompt.js';
+import {
+  type BusinessAdvisorResult,
+  businessAdvisorSchema,
+} from '../ai/schemas/business-advisor.schema.js';
 import {
   type GeneratedProductDescription,
   productDescriptionSchema,
@@ -14,15 +22,20 @@ import {
   productReviewsAnalysisSchema,
   singleReviewAnalysisSchema,
 } from '../ai/schemas/review-analysis.schema.js';
+import AIInsight from '../models/ai-insight.model.js';
 import Product from '../models/product.model.js';
 import Review from '../models/review.model.js';
 import { ApiError } from '../utils/api-error.js';
 import {
   type ValidatedGenerateDescriptionInput,
+  validateBusinessAdvisorInput,
   validateGenerateDescriptionInput,
   validateProductReviewsAnalysisInput,
   validateSingleReviewAnalysisInput,
 } from '../validators/ai.validator.js';
+import { getPeriodComparison, getTopProducts } from './analytics.service.js';
+import { getInventorySummary } from './inventory.service.js';
+import { getMerchantReviewSummaryService } from './review.service.js';
 
 export interface GeminiHealthTestResult {
   configured: boolean;
@@ -319,4 +332,157 @@ export async function analyzeProductReviewsService(
     const errorMessage = error instanceof Error ? error.message : 'Gemini AI analysis failed.';
     throw new ApiError(502, 'AI_SERVICE_ERROR', `Failed to analyze product reviews: ${errorMessage}`);
   }
+}
+
+export async function generateBusinessAdvisorService(
+  merchantId: string,
+  rawInput: unknown
+): Promise<BusinessAdvisorResult> {
+  const { timeRange, forceRefresh } = validateBusinessAdvisorInput(rawInput);
+
+  if (!forceRefresh) {
+    const latestInsight = await AIInsight.findOne({ merchant: merchantId, type: 'business_advisor' })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    if (latestInsight && latestInsight.supportingMetrics) {
+      const cached = latestInsight.supportingMetrics as BusinessAdvisorResult;
+      if (cached.healthScore !== undefined && cached.executiveSummary && Array.isArray(cached.strengths)) {
+        return cached;
+      }
+    }
+  }
+
+  const days = timeRange === '7d' ? 7 : timeRange === '90d' ? 90 : 30;
+
+  const [periodComp, topProducts, invSummary, reviewSummary] = await Promise.all([
+    getPeriodComparison(merchantId, { range: timeRange }),
+    getTopProducts(merchantId, { sortBy: 'revenue', limit: 5 }),
+    getInventorySummary(merchantId, { lookbackDays: days }),
+    getMerchantReviewSummaryService(merchantId),
+  ]);
+
+  const summary = periodComp.summary;
+  const snapshot: BusinessSnapshotData = {
+    timeRange,
+    revenue: summary.revenue,
+    previousRevenue: summary.revenueChange !== 0 ? Math.round((summary.revenue / (1 + summary.revenueChange / 100)) * 100) / 100 : summary.revenue,
+    revenueGrowth: summary.revenueChange,
+    orders: summary.orders,
+    previousOrders: summary.ordersChange !== 0 ? Math.round(summary.orders / (1 + summary.ordersChange / 100)) : summary.orders,
+    ordersGrowth: summary.ordersChange,
+    aov: summary.aov,
+    previousAov: summary.aovChange !== 0 ? Math.round((summary.aov / (1 + summary.aovChange / 100)) * 100) / 100 : summary.aov,
+    topProducts: topProducts.map((p) => ({
+      name: p.name,
+      category: p.category,
+      revenue: p.revenue,
+      quantity: p.quantity,
+    })),
+    inventoryRisks: {
+      totalProducts: invSummary.totalProducts,
+      outOfStockCount: invSummary.outOfStockCount,
+      criticalCount: invSummary.criticalRiskCount,
+      highRiskCount: invSummary.highRiskCount,
+    },
+    reviewsSummary: {
+      averageRating: reviewSummary.averageRating,
+      totalReviews: reviewSummary.totalReviews,
+      negativeReviewsCount: reviewSummary.negativeReviewsCount,
+      lowestRatedProducts: reviewSummary.lowestRatedProducts.map((p) => ({
+        name: p.name,
+        averageRating: p.averageRating,
+      })),
+    },
+  };
+
+  if (!isGeminiConfigured()) {
+    // If an existing insight was saved earlier, return it in degraded mode
+    const fallbackInsight = await AIInsight.findOne({ merchant: merchantId, type: 'business_advisor' })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    if (fallbackInsight && fallbackInsight.supportingMetrics) {
+      return fallbackInsight.supportingMetrics as BusinessAdvisorResult;
+    }
+
+    throw new ApiError(
+      503,
+      'AI_UNCONFIGURED',
+      'GEMINI_API_KEY environment variable is missing on the server. Unable to generate AI Business Advisor analysis.'
+    );
+  }
+
+  const ai = getGeminiClient();
+  if (!ai) {
+    throw new ApiError(500, 'AI_CLIENT_ERROR', 'Gemini AI client initialization failed.');
+  }
+
+  const model = getGeminiModelName();
+  const { systemInstruction, userPrompt } = buildBusinessAdvisorPrompt(snapshot);
+
+  try {
+    const response = await ai.models.generateContent({
+      model,
+      contents: userPrompt,
+      config: {
+        systemInstruction,
+        responseMimeType: 'application/json',
+        responseSchema: businessAdvisorSchema,
+      },
+    });
+
+    const text = response.text?.trim();
+    if (!text) {
+      throw new ApiError(502, 'AI_EMPTY_RESPONSE', 'Gemini returned an empty response.');
+    }
+
+    const parsed = JSON.parse(text) as BusinessAdvisorResult;
+    if (
+      typeof parsed.healthScore !== 'number' ||
+      !parsed.executiveSummary ||
+      !Array.isArray(parsed.strengths) ||
+      !Array.isArray(parsed.risks) ||
+      !Array.isArray(parsed.recommendedActions)
+    ) {
+      throw new ApiError(
+        502,
+        'AI_SCHEMA_MISMATCH',
+        'Gemini response did not conform to expected Business Advisor schema.'
+      );
+    }
+
+    parsed.timeRange = timeRange;
+    parsed.analyzedAt = new Date().toISOString();
+
+    await AIInsight.create({
+      merchant: merchantId,
+      type: 'business_advisor',
+      title: `AI Business Advisor Summary (${timeRange})`,
+      summary: parsed.executiveSummary,
+      severity: parsed.healthScore >= 70 ? 'info' : parsed.healthScore >= 40 ? 'warning' : 'critical',
+      source: 'gemini_advisor',
+      supportingMetrics: parsed,
+    });
+
+    return parsed;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Gemini AI Advisor analysis failed.';
+    throw new ApiError(502, 'AI_SERVICE_ERROR', `Failed to generate business advisor insights: ${errorMessage}`);
+  }
+}
+
+export async function getLatestBusinessAdvisorService(
+  merchantId: string
+): Promise<BusinessAdvisorResult | null> {
+  const latestInsight = await AIInsight.findOne({ merchant: merchantId, type: 'business_advisor' })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  if (!latestInsight || !latestInsight.supportingMetrics) {
+    return null;
+  }
+
+  return latestInsight.supportingMetrics as BusinessAdvisorResult;
 }

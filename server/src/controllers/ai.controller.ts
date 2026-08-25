@@ -2,7 +2,9 @@ import type { NextFunction, Request, Response } from 'express';
 import {
   analyzeProductReviewsService,
   analyzeSingleReviewService,
+  generateBusinessAdvisorService,
   generateProductDescriptionService,
+  getLatestBusinessAdvisorService,
   testGeminiHealthService,
 } from '../services/ai.service.js';
 import { ApiError } from '../utils/api-error.js';
@@ -84,6 +86,42 @@ export async function analyzeProductReviewsHandler(
       ...request.body,
       productId: productId ?? request.body?.productId,
     });
+
+    response.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function generateBusinessAdvisorHandler(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const merchantId = getMerchantId(request);
+    const result = await generateBusinessAdvisorService(merchantId, request.body);
+
+    response.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getLatestBusinessAdvisorHandler(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const merchantId = getMerchantId(request);
+    const result = await getLatestBusinessAdvisorService(merchantId);
 
     response.json({
       success: true,

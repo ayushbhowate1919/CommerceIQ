@@ -206,7 +206,7 @@ export async function getInventoryRisks(
 
 export async function getInventorySummary(
   merchantId: string,
-  query: InventoryQueryInput,
+  query: InventoryQueryInput = {},
 ): Promise<InventorySummaryResponse> {
   const merchantObjectId = new mongoose.Types.ObjectId(merchantId);
   const lookbackDays = query.lookbackDays ?? 30;
