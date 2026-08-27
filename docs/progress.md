@@ -369,6 +369,32 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 13 — AI Tool Calling / Natural-Language Analytics (completed)
+
+### Completed Work
+
+- Created Gemini JSON tool function declarations (`server/src/ai/tools/analytics-tools.ts`) using `@google/genai` for the 3 initial analytics tools (`get_revenue_summary`, `get_top_products`, `get_revenue_by_category`).
+- Implemented tool dispatch registry (`executeAnalyticsTool`) validating parameters via `validateAnalyticsQuery` and invoking underlying MongoDB aggregation services in `analytics.service.ts` with `merchantId` scoping.
+- Created prompt generator (`server/src/ai/prompts/analytics-assistant.prompt.ts`) establishing system instructions for the Analytics Assistant to strictly rely on tool function calls for store data.
+- Added payload validator function (`validateAnalyticsQueryInput` in `server/src/validators/ai.validator.ts`) enforcing input checks on natural-language query strings.
+- Implemented multi-turn function call loop service (`processAnalyticsQueryService` in `server/src/services/ai.service.ts`) dispatching tool calls back and forth with Gemini until final natural-language response and tool execution log are produced.
+- Added controller handler (`processAnalyticsQueryHandler` in `server/src/controllers/ai.controller.ts`) and mounted route `POST /api/ai/analytics-query` protected with `requireAuthentication` in `server/src/routes/ai.routes.ts`.
+- Updated client TypeScript type definitions (`client/src/types/ai.ts`) and API client (`client/src/api/aiApi.ts`).
+- Created comprehensive integration test suite `server/tests/milestone13-verification.test.ts` testing auth protection, payload validation, direct tool execution logic, multi-tenant isolation, exact spec query checkpoints, and degraded mode when unconfigured.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all test suites including `milestone13-verification.test.ts`.
+- Verified multi-tenant data isolation: Merchant B tool dispatch returns 0 revenue and 0 metrics.
+- Verified degraded mode handling when `GEMINI_API_KEY` is missing.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-13 — AI Tool Calling / Natural-Language Analytics
+14 — Expand Analytics Tools
+

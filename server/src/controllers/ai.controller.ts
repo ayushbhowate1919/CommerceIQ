@@ -5,6 +5,7 @@ import {
   generateBusinessAdvisorService,
   generateProductDescriptionService,
   getLatestBusinessAdvisorService,
+  processAnalyticsQueryService,
   testGeminiHealthService,
 } from '../services/ai.service.js';
 import { ApiError } from '../utils/api-error.js';
@@ -16,7 +17,26 @@ function getMerchantId(request: Request): string {
   return request.authenticatedUser._id.toString();
 }
 
+export async function processAnalyticsQueryHandler(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const merchantId = getMerchantId(request);
+    const result = await processAnalyticsQueryService(merchantId, request.body);
+
+    response.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function healthTestHandler(
+
   request: Request,
   response: Response,
   next: NextFunction

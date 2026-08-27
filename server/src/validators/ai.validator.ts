@@ -144,4 +144,28 @@ export function validateBusinessAdvisorInput(payload: unknown): ValidatedBusines
   return { timeRange, forceRefresh };
 }
 
+export interface ValidatedAnalyticsQueryInput {
+  query: string;
+}
+
+export function validateAnalyticsQueryInput(payload: unknown): ValidatedAnalyticsQueryInput {
+  if (!payload || typeof payload !== 'object') {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Request body must be a valid JSON object.');
+  }
+
+  const raw = payload as Record<string, unknown>;
+
+  if (typeof raw.query !== 'string' || raw.query.trim().length === 0) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'A non-empty analytics query string is required.');
+  }
+
+  const query = raw.query.trim();
+  if (query.length < 2 || query.length > 500) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Query must be between 2 and 500 characters.');
+  }
+
+  return { query };
+}
+
+
 

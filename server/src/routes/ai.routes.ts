@@ -6,6 +6,7 @@ import {
   generateDescriptionHandler,
   getLatestBusinessAdvisorHandler,
   healthTestHandler,
+  processAnalyticsQueryHandler,
 } from '../controllers/ai.controller.js';
 import { requireAuthentication } from '../middleware/auth.middleware.js';
 
@@ -19,5 +20,7 @@ aiRouter.post('/analyze-review/:reviewId', analyzeSingleReviewHandler);
 aiRouter.post('/analyze-product-reviews/:productId', analyzeProductReviewsHandler);
 aiRouter.post('/business-advisor', generateBusinessAdvisorHandler);
 aiRouter.get('/business-advisor/latest', getLatestBusinessAdvisorHandler);
+aiRouter.post('/analytics-query', processAnalyticsQueryHandler);
 
 export default aiRouter;
+

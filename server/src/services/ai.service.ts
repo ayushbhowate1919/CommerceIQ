@@ -1,4 +1,6 @@
+import { type Content } from '@google/genai';
 import { getGeminiClient, getGeminiModelName, isGeminiConfigured } from '../ai/client.js';
+import { buildAnalyticsAssistantSystemInstruction } from '../ai/prompts/analytics-assistant.prompt.js';
 import {
   type BusinessSnapshotData,
   buildBusinessAdvisorPrompt,
@@ -22,12 +24,18 @@ import {
   productReviewsAnalysisSchema,
   singleReviewAnalysisSchema,
 } from '../ai/schemas/review-analysis.schema.js';
+import {
+  MILESTONE_13_TOOL_DECLARATIONS,
+  type ToolCallResult,
+  executeAnalyticsTool,
+} from '../ai/tools/analytics-tools.js';
 import AIInsight from '../models/ai-insight.model.js';
 import Product from '../models/product.model.js';
 import Review from '../models/review.model.js';
 import { ApiError } from '../utils/api-error.js';
 import {
   type ValidatedGenerateDescriptionInput,
+  validateAnalyticsQueryInput,
   validateBusinessAdvisorInput,
   validateGenerateDescriptionInput,
   validateProductReviewsAnalysisInput,
@@ -36,6 +44,7 @@ import {
 import { getPeriodComparison, getTopProducts } from './analytics.service.js';
 import { getInventorySummary } from './inventory.service.js';
 import { getMerchantReviewSummaryService } from './review.service.js';
+
 
 export interface GeminiHealthTestResult {
   configured: boolean;
@@ -486,3 +495,114 @@ export async function getLatestBusinessAdvisorService(
 
   return latestInsight.supportingMetrics as BusinessAdvisorResult;
 }
+
+export interface ProcessAnalyticsQueryResult {
+  answer: string;
+  toolsUsed: ToolCallResult[];
+  aiConfigured: boolean;
+}
+
+export async function processAnalyticsQueryService(
+  merchantId: string,
+  rawInput: unknown
+): Promise<ProcessAnalyticsQueryResult> {
+  const { query } = validateAnalyticsQueryInput(rawInput);
+
+  if (!isGeminiConfigured()) {
+    return {
+      answer:
+        'Gemini AI is currently unconfigured (GEMINI_API_KEY environment variable missing). Direct analytics and reporting are available via the merchant dashboard.',
+      toolsUsed: [],
+      aiConfigured: false,
+    };
+  }
+
+  const ai = getGeminiClient();
+  if (!ai) {
+    throw new ApiError(500, 'AI_CLIENT_ERROR', 'Gemini AI client initialization failed.');
+  }
+
+  const model = getGeminiModelName();
+  const systemInstruction = buildAnalyticsAssistantSystemInstruction();
+  const toolsUsed: ToolCallResult[] = [];
+
+  const contents: Content[] = [
+    {
+      role: 'user',
+      parts: [{ text: query }],
+    },
+  ];
+
+  let maxLoops = 5;
+
+  try {
+    while (maxLoops > 0) {
+      maxLoops -= 1;
+
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction,
+          tools: [{ functionDeclarations: MILESTONE_13_TOOL_DECLARATIONS }],
+        },
+      });
+
+      const candidate = response.candidates?.[0];
+      if (!candidate || !candidate.content) {
+        break;
+      }
+
+      contents.push(candidate.content);
+
+      const functionCalls = response.functionCalls;
+      if (!functionCalls || functionCalls.length === 0) {
+        const textAnswer = response.text?.trim() ?? 'Analysis complete.';
+        return {
+          answer: textAnswer,
+          toolsUsed,
+          aiConfigured: true,
+        };
+      }
+
+      const responseParts: Array<Record<string, unknown>> = [];
+
+      for (const call of functionCalls) {
+        if (!call.name) continue;
+        const callName = call.name;
+        const callArgs = (call.args as Record<string, unknown>) ?? {};
+
+        const result = await executeAnalyticsTool(merchantId, callName, callArgs);
+        toolsUsed.push(result);
+
+        responseParts.push({
+          functionResponse: {
+            name: callName,
+            response: { output: result.output },
+          },
+        });
+      }
+
+      contents.push({
+        role: 'user',
+        parts: responseParts,
+      });
+    }
+
+    const finalAnswer =
+      contents.length > 0
+        ? contents[contents.length - 1]?.parts?.map((p) => p.text).filter(Boolean).join('\n') || 'Analysis complete.'
+        : 'Analysis complete.';
+
+    return {
+      answer: finalAnswer,
+      toolsUsed,
+      aiConfigured: true,
+    };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error during analytics query.';
+    throw new ApiError(502, 'AI_SERVICE_ERROR', `Failed to process AI analytics query: ${errorMessage}`);
+  }
+}
+

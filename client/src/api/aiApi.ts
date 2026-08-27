@@ -1,5 +1,6 @@
 import { request } from './client.js';
 import type {
+  AnalyticsQueryResponse,
   BusinessAdvisorResult,
   GeminiHealthTestResult,
   GenerateDescriptionPayload,
@@ -64,3 +65,12 @@ export async function getLatestBusinessAdvisorApi(): Promise<BusinessAdvisorResu
   });
   return response.data;
 }
+
+export async function processAnalyticsQueryApi(query: string): Promise<AnalyticsQueryResponse> {
+  const response = await request<AnalyticsQueryResponse>('/ai/analytics-query', {
+    method: 'POST',
+    body: JSON.stringify({ query }),
+  });
+  return response.data;
+}
+

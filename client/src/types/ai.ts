@@ -58,3 +58,20 @@ export interface BusinessAdvisorResult {
   timeRange?: string;
   analyzedAt?: string;
 }
+
+export interface ToolExecutionLog {
+  toolName: string;
+  args: Record<string, unknown>;
+  output: unknown;
+}
+
+export interface AnalyticsQueryPayload {
+  query: string;
+}
+
+export interface AnalyticsQueryResponse {
+  answer: string;
+  toolsUsed: ToolExecutionLog[];
+  aiConfigured: boolean;
+}
+
