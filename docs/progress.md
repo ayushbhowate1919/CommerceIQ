@@ -420,8 +420,28 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 15 — AI Assistant UI (completed)
+
+### Completed Work
+
+- Built interactive AI Commerce Analyst workspace page (`client/src/pages/AiAssistantPage.tsx`) featuring real-time conversation thread, status header, 6 quick-suggest prompt cards, executed tools accordion, and contextual navigation chips.
+- Added "AI Commerce Analyst" link (`/ai/assistant`) to sidebar navigation (`client/src/components/layout/SidebarLayout.tsx`) under AI Studio section.
+- Mounted protected route `/ai/assistant` in application router (`client/src/App.tsx`).
+- Created integration test suite `server/tests/milestone15-verification.test.ts` testing health checks, auth protection, and analytics queries.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all 15 test suites including `milestone15-verification.test.ts`.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-15 — AI Assistant UI
+16 — Security Hardening
+
 
 

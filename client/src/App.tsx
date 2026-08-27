@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type FormEvent
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { SidebarLayout } from './components/layout/SidebarLayout';
+import { AiAssistantPage } from './pages/AiAssistantPage';
 import { BusinessAdvisorPage } from './pages/BusinessAdvisorPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DescriptionGeneratorPage } from './pages/DescriptionGeneratorPage';
@@ -809,6 +810,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ai/assistant"
+            element={
+              <ProtectedRoute>
+                <AiAssistantPage />
               </ProtectedRoute>
             }
           />
