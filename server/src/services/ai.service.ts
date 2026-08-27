@@ -25,7 +25,7 @@ import {
   singleReviewAnalysisSchema,
 } from '../ai/schemas/review-analysis.schema.js';
 import {
-  MILESTONE_13_TOOL_DECLARATIONS,
+  ALL_ANALYTICS_TOOL_DECLARATIONS,
   type ToolCallResult,
   executeAnalyticsTool,
 } from '../ai/tools/analytics-tools.js';
@@ -544,7 +544,7 @@ export async function processAnalyticsQueryService(
         contents,
         config: {
           systemInstruction,
-          tools: [{ functionDeclarations: MILESTONE_13_TOOL_DECLARATIONS }],
+          tools: [{ functionDeclarations: ALL_ANALYTICS_TOOL_DECLARATIONS }],
         },
       });
 

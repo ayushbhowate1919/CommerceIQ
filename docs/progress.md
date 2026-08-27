@@ -394,7 +394,34 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 14 — Expand Analytics Tools (completed)
+
+### Completed Work
+
+- Expanded AI Tool Calling whitelist (`server/src/ai/tools/analytics-tools.ts`) from 3 to 8 tools by declaring JSON function schemas for:
+  - `get_sales_trend` (historical sales, order volume, and AOV trends)
+  - `get_inventory_risk` (stockout warnings, risk classification, and reorder levels)
+  - `get_product_performance` (detailed per-product sales metrics paired with rating scores)
+  - `get_order_summary` (order status count breakdown and gross vs net revenue)
+  - `get_period_comparison` (side-by-side performance comparison comparing current to previous period)
+- Updated tool dispatch engine (`executeAnalyticsTool`) to validate parameters and invoke underlying database aggregation services (`getRevenueTrend`, `getInventoryRisks`, `getProductPerformance`, `getOrderSummary`, `getPeriodComparison`) with `merchantId` scoping.
+- Updated system prompt (`server/src/ai/prompts/analytics-assistant.prompt.ts`) referencing all 8 available tools and guiding Gemini on tool selection logic.
+- Updated `processAnalyticsQueryService` in `server/src/services/ai.service.ts` to pass `ALL_ANALYTICS_TOOL_DECLARATIONS` to Gemini `generateContent`.
+- Created comprehensive integration test suite `server/tests/milestone14-verification.test.ts` verifying direct tool execution across all 5 new tools, multi-tenant isolation, and natural-language query processing.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all 14 test suites including `milestone14-verification.test.ts`.
+- Verified multi-tenant data isolation: Merchant B receives 0 metrics across all expanded tools.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-14 — Expand Analytics Tools
+15 — AI Assistant UI
+
 
