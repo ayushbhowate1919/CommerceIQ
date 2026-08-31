@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { checkAiHealth } from '../../api/aiApi';
 
 type User = {
   id: string;
@@ -16,21 +17,63 @@ type SidebarLayoutProps = {
 
 export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) {
   const navigate = useNavigate();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [aiStatus, setAiStatus] = useState<'checking' | 'configured' | 'unconfigured'>('checking');
+
+  useEffect(() => {
+    let mounted = true;
+    checkAiHealth()
+      .then((health) => {
+        if (mounted) {
+          setAiStatus(health.configured ? 'configured' : 'unconfigured');
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setAiStatus('unconfigured');
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleLogout() {
     await onLogout();
     navigate('/login');
   }
 
+  function closeMobileNav() {
+    setIsMobileOpen(false);
+  }
+
   return (
     <div className="layout-wrapper">
-      <aside className="sidebar">
+      {/* Mobile backdrop overlay */}
+      {isMobileOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={closeMobileNav}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
-          <Link to="/dashboard" className="brand-logo">
+          <Link to="/dashboard" className="brand-logo" onClick={closeMobileNav}>
             <span className="brand-icon">⚡</span>
             <span className="brand-title">CommerceIQ</span>
           </Link>
-          <span className="badge-pro">PRO</span>
+          <div className="brand-right">
+            <span className="badge-pro">PRO</span>
+            <button
+              className="mobile-close-btn"
+              onClick={closeMobileNav}
+              aria-label="Close navigation menu"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="sidebar-store-info">
@@ -43,37 +86,65 @@ export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) 
 
         <nav className="sidebar-nav">
           <div className="nav-section-title">Overview</div>
-          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/dashboard"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">📊</span>
             <span>Dashboard</span>
           </NavLink>
 
           <div className="nav-section-title">Catalog & Inventory</div>
-          <NavLink to="/products" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/products"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">📦</span>
             <span>Products</span>
           </NavLink>
-          <NavLink to="/inventory" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/inventory"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">⚠️</span>
             <span>Inventory Health</span>
           </NavLink>
 
           <div className="nav-section-title">Customer Feedback</div>
-          <NavLink to="/reviews" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/reviews"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">⭐</span>
             <span>Customer Reviews</span>
           </NavLink>
 
           <div className="nav-section-title">AI Studio</div>
-          <NavLink to="/ai/assistant" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/ai/assistant"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">💬</span>
             <span>AI Commerce Analyst</span>
           </NavLink>
-          <NavLink to="/ai/business-advisor" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/ai/business-advisor"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">🧠</span>
             <span>AI Business Advisor</span>
           </NavLink>
-          <NavLink to="/ai/description-generator" className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}>
+          <NavLink
+            to="/ai/description-generator"
+            onClick={closeMobileNav}
+            className={({ isActive }) => (isActive ? 'sidebar-link active' : 'sidebar-link')}
+          >
             <span className="link-icon">✨</span>
             <span>Description Studio</span>
           </NavLink>
@@ -83,7 +154,11 @@ export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) 
           <div className="user-info">
             <span className="user-email">{user.email}</span>
           </div>
-          <button onClick={() => void handleLogout()} className="btn btn-logout">
+          <button
+            onClick={() => void handleLogout()}
+            className="btn btn-logout"
+            aria-label="Log out of account"
+          >
             Log out
           </button>
         </div>
@@ -91,9 +166,30 @@ export function SidebarLayout({ user, onLogout, children }: SidebarLayoutProps) 
 
       <div className="main-content-area">
         <header className="topbar">
-          <div className="topbar-search">
-            <span className="topbar-status-dot"></span>
-            <span className="topbar-status-text">Live Workspace Connected</span>
+          <div className="topbar-left">
+            <button
+              className="mobile-hamburger-btn"
+              onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-label="Toggle navigation drawer"
+            >
+              ☰
+            </button>
+            <div className="topbar-search">
+              <span
+                className={`topbar-status-dot ${
+                  aiStatus === 'configured'
+                    ? 'status-online'
+                    : aiStatus === 'unconfigured'
+                    ? 'status-degraded'
+                    : 'status-checking'
+                }`}
+              ></span>
+              <span className="topbar-status-text">
+                {aiStatus === 'configured' && 'Gemini 2.5 Flash Active'}
+                {aiStatus === 'unconfigured' && 'AI Degraded (Key Missing)'}
+                {aiStatus === 'checking' && 'Checking AI Status...'}
+              </span>
+            </div>
           </div>
           <div className="topbar-actions">
             <span className="user-chip">{user.email}</span>

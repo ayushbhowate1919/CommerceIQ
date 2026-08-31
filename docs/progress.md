@@ -466,9 +466,31 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 17 — Polish (completed)
+
+### Completed Work
+
+- Added mobile navigation drawer & toggle button to `SidebarLayout.tsx` for viewports under 768px (`isMobileOpen` state, backdrop overlay, mobile close button, auto-closing on nav link clicks).
+- Added live AI Health status badge in topbar header querying `GET /api/ai/health-test` (`🟢 Gemini 2.5 Flash Active` when configured; `🟡 AI Degraded (Key Missing)` when unconfigured).
+- Added responsive CSS media queries (`@media (max-width: 768px)`) in `client/src/styles.css` for sidebar drawer overlay, topbar header alignment, KPI card grids, dashboard chart wrappers, and product/inventory table overflow scrolling.
+- Polished empty state components and clear filter actions across Products, Inventory Risks, Customer Reviews, AI Assistant chat, and AI Business Advisor pages.
+- Verified clean skeleton placeholders and animated loading indicators during API data fetching.
+- Performed code cleanup removing dead code, unused imports, and console warnings across `client/` and `server/`.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server with 0 compilation errors.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all 16 test suites.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-17 — Polish
+18 — Testing
+
 
 
 

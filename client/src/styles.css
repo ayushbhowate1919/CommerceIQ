@@ -1236,3 +1236,123 @@ button:disabled, .btn:disabled {
   width: 100%;
 }
 
+/* Topbar Left & Hamburger Button */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.mobile-hamburger-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 1.1rem;
+  color: #1e293b;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.mobile-hamburger-btn:hover {
+  background: #f1f5f9;
+}
+
+/* AI Health Status Dot Colors */
+.topbar-status-dot.status-online {
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.topbar-status-dot.status-degraded {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.topbar-status-dot.status-checking {
+  background-color: #94a3b8;
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.4);
+}
+
+/* Mobile Sidebar Drawer Overlay & Close Button */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+}
+
+.brand-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.mobile-close-btn:hover {
+  color: white;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+  .mobile-hamburger-btn {
+    display: inline-flex;
+  }
+
+  .mobile-close-btn {
+    display: inline-block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -18rem;
+    height: 100vh;
+    z-index: 100;
+    transition: left 0.25s ease-in-out;
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .topbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .user-chip {
+    display: none;
+  }
+
+  .content-body {
+    padding: 1rem !important;
+  }
+
+  .kpi-cards-grid {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+
+  .dashboard-grid,
+  .charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inventory-table-wrapper,
+  .products-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+
