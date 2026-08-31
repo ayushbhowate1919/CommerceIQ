@@ -487,9 +487,33 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 18 — Testing (completed)
+
+### Completed Work
+
+- Created dedicated unit testing suite [`server/tests/unit-tests.test.ts`](file:///d:/Projects/CommerceIQ/server/tests/unit-tests.test.ts) covering:
+  - Inventory calculation heuristics (`calculateProductRisk` logic across critical, high, medium, healthy, out-of-stock, and zero-sales states).
+  - Percentage change math (`calculatePercentageChange` for positive growth, negative decline, and zero previous value edge cases).
+  - Analytics date window helper parsers (`parseDateWindow` for `7d`, `30d`, `90d`, `12m` presets and custom start/end ISO bounds).
+  - Tool and endpoint input validation modules (`validateAnalyticsQuery`, `validateInventoryQuery`, `validateReviewQuery`, `validateGenerateDescriptionInput`, `validateSingleReviewAnalysisInput`, `validateAnalyticsQueryInput`).
+- Created consolidated integration testing suite [`server/tests/milestone18-verification.test.ts`](file:///d:/Projects/CommerceIQ/server/tests/milestone18-verification.test.ts) covering Auth API, Product Management API, Dashboard Analytics API, and AI Tool Dispatch across all 8 tools.
+- Created comprehensive 14-step manual testing script [`docs/manual_testing_guide.md`](file:///d:/Projects/CommerceIQ/docs/manual_testing_guide.md) documenting step-by-step user flow verification from registration to AI analysis and logout.
+
+### Verification Performed
+
+- Executed `npx.cmd tsx --test tests/unit-tests.test.ts` passing all 13 unit test cases (0 failures).
+- Executed `npx.cmd tsx --test tests/milestone18-verification.test.ts` passing all 4 integration test cases (0 failures).
+- Executed `npm.cmd run build` for client and server passing cleanly with 0 TypeScript compilation errors.
+- Executed `npm.cmd run lint` across monorepo passing cleanly with 0 warnings or errors.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-18 — Testing
+19 — Deployment
+
 
 
 
