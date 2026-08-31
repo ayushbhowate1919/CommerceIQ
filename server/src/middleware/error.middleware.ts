@@ -6,6 +6,22 @@ export function notFoundHandler(_request: Request, _response: Response, next: Ne
   next(new ApiError(404, 'NOT_FOUND', 'The requested endpoint was not found.'));
 }
 
+function sanitizeErrorMessage(message: string): string {
+  let sanitized = message;
+  if (environment.geminiApiKey) {
+    sanitized = sanitized.replaceAll(environment.geminiApiKey, '[REDACTED_GEMINI_KEY]');
+  }
+  if (environment.jwtSecret) {
+    sanitized = sanitized.replaceAll(environment.jwtSecret, '[REDACTED_JWT_SECRET]');
+  }
+  if (environment.mongoUri) {
+    sanitized = sanitized.replaceAll(environment.mongoUri, '[REDACTED_MONGO_URI]');
+  }
+  sanitized = sanitized.replace(/Bearer\s+[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*/gi, 'Bearer [REDACTED_TOKEN]');
+  sanitized = sanitized.replace(/"password"\s*:\s*"[^"]+"/gi, '"password":"[REDACTED]"');
+  return sanitized;
+}
+
 export function errorHandler(error: unknown, _request: Request, response: Response, _next: NextFunction): void {
   void _next;
   if (error instanceof ApiError) {
@@ -23,12 +39,20 @@ export function errorHandler(error: unknown, _request: Request, response: Respon
     return;
   }
 
-  console.error(error);
+  if (error instanceof Error) {
+    console.error(sanitizeErrorMessage(error.message));
+  } else if (typeof error === 'string') {
+    console.error(sanitizeErrorMessage(error));
+  } else {
+    console.error('An unknown error occurred');
+  }
+
   response.status(500).json({
     success: false,
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message: environment.nodeEnv === 'production' ? 'An unexpected error occurred.' : 'An unexpected error occurred.',
+      message: 'An unexpected error occurred.',
     },
   });
 }
+

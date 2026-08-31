@@ -439,9 +439,37 @@
 
 - PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
 
+## Milestone 16 — Security Hardening (completed)
+
+### Completed Work
+
+- Installed `helmet` and `express-rate-limit` dependencies in `@commerceiq/server`.
+- Added Helmet HTTP security headers middleware (`X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, disabled `X-Powered-By`).
+- Configured hardened CORS options in `server/src/app.ts` with strict allowed origins (`CLIENT_URL` / default `http://localhost:5173`), allowed methods (`GET, POST, PATCH, DELETE, OPTIONS`), allowed headers (`Content-Type, Authorization`), credentials support, and 204 preflight status.
+- Created Express rate limiting middleware (`server/src/middleware/rate-limiter.middleware.ts`):
+  - `aiRateLimiter`: Enforces 30 requests / 15 min per IP window on AI endpoints (`/api/ai/*`), returning HTTP 429 `TOO_MANY_REQUESTS`.
+  - `generalRateLimiter`: Enforces rate limit bounds on general API endpoints.
+- Updated `executeAnalyticsTool` in `server/src/ai/tools/analytics-tools.ts` with defensive try/catch argument validation:
+  - Validates parameters across all 8 analytics tools (`get_revenue_summary`, `get_top_products`, `get_revenue_by_category`, `get_sales_trend`, `get_inventory_risk`, `get_product_performance`, `get_order_summary`, `get_period_comparison`).
+  - Fails safely on invalid arguments (e.g. invalid date formats, out-of-range presets, negative limits) and unknown tool names by returning structured error outputs (`{ success: false, error: "..." }`) rather than throwing unhandled 500 exceptions.
+- Enhanced global error middleware (`server/src/middleware/error.middleware.ts`) with `sanitizeErrorMessage` helper scrubbing sensitive tokens (`GEMINI_API_KEY`, `JWT_SECRET`, Mongoose URI secrets, Bearer tokens, passwords) before logging.
+- Audited multi-tenant data isolation and authorization checks across all services.
+- Created comprehensive integration test suite `server/tests/milestone16-verification.test.ts` verifying Helmet security headers, CORS preflight status, AI endpoint rate limiting (429 code), safe invalid tool argument handling, multi-tenant isolation, and error log sanitization.
+
+### Verification Performed
+
+- `npm.cmd run build` passed cleanly for client and server.
+- `npm.cmd run lint` passed cleanly with 0 warnings or errors across client and server.
+- `npm.cmd test` passed all test cases across all 16 test suites including `milestone16-verification.test.ts`.
+
+### Known Issues
+
+- PowerShell's `npm` shim is misconfigured on this machine; use `npm.cmd` from PowerShell until it is repaired.
+
 ## Next Milestone
 
-16 — Security Hardening
+17 — Polish
+
 
 
 

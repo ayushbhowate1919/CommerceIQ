@@ -27,5 +27,7 @@ const Product = model('Product', productSchema);
 
 export type ProductDocument = HydratedDocument<InferSchemaType<typeof productSchema>>;
 
+export { Product };
 export default Product;
+
 

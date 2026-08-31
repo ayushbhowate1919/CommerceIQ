@@ -249,52 +249,86 @@ export async function executeAnalyticsTool(
   toolName: string,
   rawArgs: Record<string, unknown>,
 ): Promise<ToolCallResult> {
-  const validatedAnalyticsQuery = validateAnalyticsQuery(rawArgs ?? {});
+  const safeArgs = rawArgs ?? {};
 
-  let output: unknown;
+  try {
+    let output: unknown;
 
-  switch (toolName) {
-    case 'get_revenue_summary':
-      output = await getDashboardSummary(merchantId, validatedAnalyticsQuery);
-      break;
+    switch (toolName) {
+      case 'get_revenue_summary': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getDashboardSummary(merchantId, validated);
+        break;
+      }
 
-    case 'get_top_products':
-      output = await getTopProducts(merchantId, validatedAnalyticsQuery);
-      break;
+      case 'get_top_products': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getTopProducts(merchantId, validated);
+        break;
+      }
 
-    case 'get_revenue_by_category':
-      output = await getCategoryRevenue(merchantId, validatedAnalyticsQuery);
-      break;
+      case 'get_revenue_by_category': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getCategoryRevenue(merchantId, validated);
+        break;
+      }
 
-    case 'get_sales_trend':
-      output = await getRevenueTrend(merchantId, validatedAnalyticsQuery);
-      break;
+      case 'get_sales_trend': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getRevenueTrend(merchantId, validated);
+        break;
+      }
 
-    case 'get_inventory_risk': {
-      const validatedInventoryQuery = validateInventoryQuery(rawArgs ?? {});
-      output = await getInventoryRisks(merchantId, validatedInventoryQuery);
-      break;
+      case 'get_inventory_risk': {
+        const validated = validateInventoryQuery(safeArgs);
+        output = await getInventoryRisks(merchantId, validated);
+        break;
+      }
+
+      case 'get_product_performance': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getProductPerformance(merchantId, validated);
+        break;
+      }
+
+      case 'get_order_summary': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getOrderSummary(merchantId, validated);
+        break;
+      }
+
+      case 'get_period_comparison': {
+        const validated = validateAnalyticsQuery(safeArgs);
+        output = await getPeriodComparison(merchantId, validated);
+        break;
+      }
+
+      default:
+        return {
+          toolName,
+          args: safeArgs,
+          output: {
+            success: false,
+            error: `Unknown tool name '${toolName}'. Supported tools: ${ALL_ANALYTICS_TOOL_DECLARATIONS.map((t) => t.name).join(', ')}.`,
+          },
+        };
     }
 
-    case 'get_product_performance':
-      output = await getProductPerformance(merchantId, validatedAnalyticsQuery);
-      break;
-
-    case 'get_order_summary':
-      output = await getOrderSummary(merchantId, validatedAnalyticsQuery);
-      break;
-
-    case 'get_period_comparison':
-      output = await getPeriodComparison(merchantId, validatedAnalyticsQuery);
-      break;
-
-    default:
-      throw new Error(`Unknown tool name: ${toolName}`);
+    return {
+      toolName,
+      args: safeArgs,
+      output,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid tool parameters.';
+    return {
+      toolName,
+      args: safeArgs,
+      output: {
+        success: false,
+        error: `Tool execution failed: ${message}`,
+      },
+    };
   }
-
-  return {
-    toolName,
-    args: rawArgs,
-    output,
-  };
 }
+
