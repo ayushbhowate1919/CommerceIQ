@@ -35,7 +35,12 @@ export function TopProductsWidget({ products, loading }: TopProductsWidgetProps)
       </div>
 
       {products.length === 0 ? (
-        <div className="empty-widget">No product sales recorded for this period.</div>
+        <div className="empty-widget">
+          <div>No product sales recorded for this period.</div>
+          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem' }}>
+            Switch to <strong>90 Days</strong> or <strong>12 Months</strong> to view top sellers.
+          </div>
+        </div>
       ) : (
         <div className="top-products-list">
           {products.map((p, idx) => {

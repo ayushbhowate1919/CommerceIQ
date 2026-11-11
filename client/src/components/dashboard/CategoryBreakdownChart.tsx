@@ -32,7 +32,12 @@ export function CategoryBreakdownChart({ data, loading }: CategoryBreakdownChart
 
       <div className="chart-wrapper">
         {data.length === 0 ? (
-          <div className="empty-chart">No category data found.</div>
+          <div className="empty-chart">
+            <div>No category data found.</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem' }}>
+              Switch to <strong>90 Days</strong> or <strong>12 Months</strong> to view historical distribution.
+            </div>
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>

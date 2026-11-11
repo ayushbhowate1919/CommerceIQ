@@ -30,7 +30,12 @@ export function RevenueTrendChart({ data, loading }: RevenueTrendChartProps) {
 
       <div className="chart-wrapper">
         {data.length === 0 ? (
-          <div className="empty-chart">No trend data available for this range.</div>
+          <div className="empty-chart">
+            <div>No trend data available for this range.</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem' }}>
+              Switch to <strong>90 Days</strong> or <strong>12 Months</strong> to view historical orders.
+            </div>
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

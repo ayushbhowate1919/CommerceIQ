@@ -152,6 +152,52 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {summary && summary.orders === 0 && !loading && (
+        <div
+          className="card"
+          style={{
+            marginBottom: '1.5rem',
+            padding: '1.1rem 1.4rem',
+            borderRadius: '0.75rem',
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: '280px' }}>
+            <h4 style={{ margin: '0 0 0.3rem 0', color: '#0369a1', fontSize: '0.95rem', fontWeight: 600 }}>
+              📅 No order records in the last {range === '7d' ? '7 days' : range === '30d' ? '30 days' : range === '90d' ? '90 days' : '12 months'}
+            </h4>
+            <p style={{ margin: 0, color: '#0c4a6e', fontSize: '0.85rem', lineHeight: 1.5 }}>
+              If you are opening this project after a break, seeded demo orders may have occurred outside this rolling date window. Switch to a wider period (e.g. 12 Months) or run <code>npm run seed</code> in your terminal to refresh orders up to today.
+            </p>
+          </div>
+          {range !== '12m' && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setRange('12m')}
+              style={{
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+              }}
+            >
+              Switch to 12 Months →
+            </button>
+          )}
+        </div>
+      )}
+
       <KpiCards summary={summary} loading={loading} />
 
       <div className="dashboard-grid-2col">

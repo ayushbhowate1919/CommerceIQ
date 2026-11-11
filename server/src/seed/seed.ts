@@ -19,7 +19,7 @@ export async function runSeed(force = false): Promise<void> {
   console.log('🌱 Starting CommerceIQ Seed Pipeline...');
   await connectDatabase();
 
-  const demoEmail = 'demo@commerceiq.com';
+  const demoEmail = process.env.SEED_EMAIL || 'demo@commerceiq.com';
   let demoMerchant = await User.findOne({ email: demoEmail });
 
   if (!demoMerchant) {
@@ -37,10 +37,13 @@ export async function runSeed(force = false): Promise<void> {
 
   const merchantId = demoMerchant._id;
 
-  // Idempotency check: if dataset already populated and force=false, skip redundant seeding
+  // Idempotency check: if dataset already populated, check if order timestamps are stale (>14 days)
   const existingProdCount = await Product.countDocuments({ merchant: merchantId });
-  if (!force && existingProdCount >= 50) {
-    console.log(`ℹ️ Baseline merchant data already present (${existingProdCount} products). Skipping re-seed.`);
+  const latestOrder = await Order.findOne({ merchant: merchantId }).sort({ orderDate: -1 });
+  const ordersAreStale = !latestOrder || (Date.now() - latestOrder.orderDate.getTime()) > (14 * 24 * 60 * 60 * 1000);
+
+  if (!force && existingProdCount >= 50 && !ordersAreStale) {
+    console.log(`ℹ️ Baseline merchant data already present and up to date (${existingProdCount} products). Skipping re-seed.`);
     return;
   }
 
@@ -246,6 +249,10 @@ export async function runSeed(force = false): Promise<void> {
 }
 
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
+  const customEmail = process.argv[2];
+  if (customEmail) {
+    process.env.SEED_EMAIL = customEmail;
+  }
   runSeed(true)
     .then(() => {
       console.log('Seed completed successfully.');
