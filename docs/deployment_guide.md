@@ -64,6 +64,8 @@ Before beginning deployment, ensure you have active accounts on:
      ```
      *(Runs compiled JavaScript: `node dist/server.js`)*
    - **Instance Type:** `Free`
+   - **Health Check Path:** `/api/ready`
+     *(Under **Advanced Settings > Health Check Path**, set to `/api/ready`. Render monitors this path and requires HTTP 200 to complete deployment; returns HTTP 503 if MongoDB is disconnected).*
 3. **Configure Backend Environment Variables on Render:**
    In the **Environment** tab, add the following key-value pairs:
 
@@ -164,7 +166,7 @@ Now that your Vercel public URL is known:
 
 Once both services are deployed, perform these verification checks:
 
-### 1. Backend Health Check
+### 1. Backend Liveness Check
 Run in terminal or browser:
 ```bash
 curl -i https://<your-render-service>.onrender.com/api/health
@@ -178,7 +180,22 @@ HTTP/1.1 200 OK
 }
 ```
 
-### 2. CORS Preflight Verification
+### 2. Backend Readiness Check
+Run in terminal or browser to verify database readiness:
+```bash
+curl -i https://<your-render-service>.onrender.com/api/ready
+```
+**Expected Response:**
+```json
+HTTP/1.1 200 OK
+{
+  "status": "ok",
+  "database": "connected"
+}
+```
+*(If MongoDB is disconnected, returns HTTP 503 with `"status": "degraded", "database": "disconnected"`).*
+
+### 3. CORS Preflight Verification
 Verify that preflight headers are returned for your Vercel domain:
 ```bash
 curl -i -X OPTIONS https://<your-render-service>.onrender.com/api/health \

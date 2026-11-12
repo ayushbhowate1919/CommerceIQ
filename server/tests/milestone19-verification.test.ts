@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import test from 'node:test';
 import cors from 'cors';
-import { corsOptions, getAllowedOrigins } from '../src/app.js';
+import mongoose from 'mongoose';
+import app, { corsOptions, getAllowedOrigins } from '../src/app.js';
 import { runSeed } from '../src/seed/seed.js';
 
 void test('Milestone 19.2 — CORS Configuration & Normalization', async (t) => {
@@ -182,3 +184,80 @@ void test('Milestone 19.2 — Seed Production Guardrail', async (t) => {
     }
   });
 });
+
+void test('Milestone 19 — Liveness and Readiness Health Checks', async (t) => {
+  const originalReadyState = mongoose.connection.readyState;
+
+  const dispatchGet = (url: string): Promise<{ status: number; body: Record<string, unknown> }> => {
+    return new Promise((resolve) => {
+      const req = new EventEmitter();
+      Object.assign(req, {
+        method: 'GET',
+        url,
+        headers: {},
+        socket: { remoteAddress: '127.0.0.1' },
+        connection: {},
+      });
+
+      const res = new EventEmitter();
+      let body = '';
+      Object.assign(res, {
+        statusCode: 200,
+        setHeader() {},
+        getHeader() {},
+        removeHeader() {},
+        end(chunk?: Buffer | string) {
+          if (chunk) {
+            body += chunk.toString();
+          }
+          resolve({
+            status: (res as unknown as { statusCode: number }).statusCode,
+            body: body ? (JSON.parse(body) as Record<string, unknown>) : {},
+          });
+        },
+      });
+
+      app.handle(req as never, res as never);
+    });
+  };
+
+  await t.test('GET /api/health returns HTTP 200 liveness response', async () => {
+    const res = await dispatchGet('/api/health');
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.status, 'ok');
+  });
+
+  await t.test('GET /api/ready returns HTTP 200 when MongoDB is connected', async () => {
+    Object.defineProperty(mongoose.connection, 'readyState', { value: 1, configurable: true, writable: true });
+    const res = await dispatchGet('/api/ready');
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.status, 'ok');
+    assert.strictEqual(res.body.database, 'connected');
+  });
+
+  await t.test('GET /api/ready returns HTTP 503 when MongoDB is disconnected', async () => {
+    Object.defineProperty(mongoose.connection, 'readyState', { value: 0, configurable: true, writable: true });
+    const res = await dispatchGet('/api/ready');
+    assert.strictEqual(res.status, 503);
+    assert.strictEqual(res.body.status, 'degraded');
+    assert.strictEqual(res.body.database, 'disconnected');
+  });
+
+  await t.test('GET /api/ready returns HTTP 503 when MongoDB is connecting or disconnecting', async () => {
+    Object.defineProperty(mongoose.connection, 'readyState', { value: 2, configurable: true, writable: true });
+    const resConnecting = await dispatchGet('/api/ready');
+    assert.strictEqual(resConnecting.status, 503);
+    assert.strictEqual(resConnecting.body.status, 'degraded');
+    assert.strictEqual(resConnecting.body.database, 'disconnected');
+
+    Object.defineProperty(mongoose.connection, 'readyState', { value: 3, configurable: true, writable: true });
+    const resDisconnecting = await dispatchGet('/api/ready');
+    assert.strictEqual(resDisconnecting.status, 503);
+    assert.strictEqual(resDisconnecting.body.status, 'degraded');
+    assert.strictEqual(resDisconnecting.body.database, 'disconnected');
+
+    // Restore original readyState
+    Object.defineProperty(mongoose.connection, 'readyState', { value: originalReadyState, configurable: true, writable: true });
+  });
+});
+

@@ -48,6 +48,16 @@ app.get('/api/health', (_request, response) => {
   response.json({ status: 'ok', database: getDatabaseStatus() });
 });
 
+app.get('/api/ready', (_request, response) => {
+  const database = getDatabaseStatus();
+  const isReady = database === 'connected';
+
+  response.status(isReady ? 200 : 503).json({
+    status: isReady ? 'ok' : 'degraded',
+    database,
+  });
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/products', productRouter);
 app.use('/api/dashboard', dashboardRouter);
