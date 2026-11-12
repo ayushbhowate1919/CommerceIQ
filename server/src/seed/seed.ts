@@ -16,6 +16,10 @@ import {
 } from './seed-data.js';
 
 export async function runSeed(force = false): Promise<void> {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+    throw new Error('Production seeding blocked: ALLOW_PRODUCTION_SEED=true is required to execute seed operations in production mode.');
+  }
+
   console.log('🌱 Starting CommerceIQ Seed Pipeline...');
   await connectDatabase();
 

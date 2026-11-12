@@ -12,18 +12,35 @@ import aiRouter from './routes/ai.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import { aiRateLimiter, generalRateLimiter } from './middleware/rate-limiter.middleware.js';
 
+export function getAllowedOrigins(configuredOrigins = process.env.CLIENT_URL): string[] {
+  const configured = configuredOrigins && configuredOrigins.trim() ? configuredOrigins : 'http://localhost:5173';
+  const origins = configured
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter((origin) => origin.length > 0);
+
+  const originSet = new Set<string>();
+  for (const origin of origins) {
+    originSet.add(origin);
+    originSet.add(`${origin}/`);
+  }
+  return Array.from(originSet);
+}
+
+export const corsOptions: cors.CorsOptions = {
+  origin: (_requestOrigin, callback) => {
+    callback(null, getAllowedOrigins());
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
 const app = express();
 
 app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL ?? 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 204,
-  })
-);
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(generalRateLimiter);
 
@@ -42,4 +59,3 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
-
